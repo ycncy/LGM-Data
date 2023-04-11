@@ -1,6 +1,7 @@
 import pandas as pd
 import sys
 from dataframe_cleaner import *
+
 sys.path.append('../data/')
 
 
@@ -32,5 +33,6 @@ def process_matches(matches):
     return matches_dataframe
 
 
-
 from data import fetch_api as api
+
+print(process_matches(api.fetch_raw_matches("10434")).dtypes)
