@@ -39,5 +39,4 @@ def fetch_raw_team(team):
 
     raw_team = requests.get(url, headers=HEADER).json()
 
-
     return raw_team
