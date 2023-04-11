@@ -1,4 +1,3 @@
-import pandas as pd
 import sys
 from dataframe_cleaner import *
 
@@ -33,6 +32,14 @@ def process_matches(matches):
     return matches_dataframe
 
 
+def process_tournaments_participants(tournaments):
+    first_dataframe = pd.json_normalize(tournaments)
+
+    cleaned_dataframe = clean_tournaments_participants_dataframe(first_dataframe)
+
+    return cleaned_dataframe
+
+
 from data import fetch_api as api
 
-print(process_matches(api.fetch_raw_matches("10434")).dtypes)
+process_tournaments_participants(api.fetch_raw_tournament_participants("10434"))

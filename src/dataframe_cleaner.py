@@ -37,3 +37,29 @@ def clean_matches_dataframe(matches_dataframe):
     cleaned_dataframe = keys_filter.drop_duplicates()
 
     return cleaned_dataframe
+
+
+def clean_tournaments_participants_dataframe(tournament_dataframe):
+    # On récupère ici uniquement les colonnes que l'on veut garder dans la table finale
+    keys_filter = tournament_dataframe.filter(items=["id", "expected_roster"])
+
+    #On récupère l'id du tournoi passé en paramètres et on créé un dictionnaire vide
+    tournament_id = keys_filter["id"][0]
+
+    #On créé une liste vide pour y ajouter les futurs valeurs du dataframe (seulement les valeurs !!!!!!!!!!)
+    new_dataframe_values = []
+
+    #On ajoute toutes les futurs valeurs (l'id du tournoi et l'id de l'équipe)
+    for roster in keys_filter["expected_roster"][0]:
+        new_row = [int(tournament_id), int(roster["team"]["id"])]
+        new_dataframe_values.append(new_row)
+
+    #On créé le dataframe avec les valeurs créées juste au dessus
+    dataframe = pd.DataFrame(new_dataframe_values, columns=["tournament_id", "team_id"])
+
+    #Suppression des lignes dupliquées
+    cleaned_dataframe = dataframe.drop_duplicates()
+
+    print(cleaned_dataframe.dtypes)
+
+    return cleaned_dataframe
