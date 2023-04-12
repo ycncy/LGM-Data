@@ -38,12 +38,21 @@ def process_tournaments_participants(tournaments):
 
 
 def process_players(team):
+    players_first_dataframe = pd.json_normalize(team[1])
+    team_id = team[0]
+
+    cleaned_dataframe = clean_players_dataframe((team_id, players_first_dataframe))
+
+    return cleaned_dataframe
+
+
+def process_team(team):
     first_dataframe = pd.json_normalize(team)
 
-    cleaned_dataframe = clean_players_dataframe(first_dataframe)
+    cleaned_dataframe = clean_teams_dataframe(first_dataframe)
 
     return cleaned_dataframe
 
 
 from src import fetch_api as api
-process_players(api.fetch_raw_players("128298"))
+process_players(api.fetch_raw_players_from_team("128298"))

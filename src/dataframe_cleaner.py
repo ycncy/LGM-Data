@@ -63,27 +63,37 @@ def clean_tournaments_participants_dataframe(tournament_dataframe):
     return cleaned_dataframe
 
 
-def clean_players_dataframe(players_dataframe):
-    #On garde uniquement l'id de l'équipe et la liste de ses joueurs
-    keys_filter = players_dataframe.filter(["id", "players"])
-    team_id = players_dataframe["id"][0]
-
-    #On créé le dataframe content les informations sur chaque joueur
-    players_without_team_dataframe = pd.DataFrame(keys_filter["players"][0])
+def clean_players_dataframe(team_and_players):
+    team_id = team_and_players[0]
+    players_dataframe = team_and_players[1]
 
     #On retire les colonne inutile
-    keys_filter_players_without_team_dataframe = players_without_team_dataframe.drop(["modified_at", "birthday"], axis=1)
+    keys_filter_players_dataframe = players_dataframe.drop(["modified_at", "birthday"], axis=1)
 
     #On ajoute l'id de l'équipe à chaque joueur
-    keys_filter_players_without_team_dataframe["team_id"] = team_id
-    keys_filter = keys_filter_players_without_team_dataframe
+    keys_filter_players_dataframe["team_id"] = team_id
+    keys_filter_teams_dataframe = keys_filter_players_dataframe
 
     #Conversion des colonnes dans les types souhaités
-    keys_filter[["first_name", "last_name", "nationality", "slug", "role", "image_url", "name"]] = keys_filter[["first_name", "last_name", "nationality", "slug", "role", "image_url", "name"]].astype(str)
-    keys_filter["age"] = keys_filter["age"].fillna(999).astype(int)
-    keys_filter[["id", "team_id"]] = keys_filter[["id", "team_id"]].astype(int)
+    keys_filter_teams_dataframe[["first_name", "last_name", "nationality", "slug", "role", "image_url", "name"]] = keys_filter_teams_dataframe[["first_name", "last_name", "nationality", "slug", "role", "image_url", "name"]].astype(str)
+    keys_filter_teams_dataframe["age"] = keys_filter_teams_dataframe["age"].fillna(999).astype(int)
+    keys_filter_teams_dataframe[["id", "team_id"]] = keys_filter_teams_dataframe[["id", "team_id"]].astype(int)
 
     #Suppression des lignes dupliquées
+    cleaned_dataframe = keys_filter_teams_dataframe.drop_duplicates()
+
+    return cleaned_dataframe
+
+
+def clean_teams_dataframe(team_dataframe):
+    #On récupère uniquement les colonnes de la base de données finale
+    keys_filter = team_dataframe.filter(["id", "acronym", "image_url", "slug", "name", "location"])
+
+    # Conversion des colonnes dans les types souhaités
+    keys_filter["id"] = keys_filter["id"].astype(int)
+    keys_filter[["acronym", "image_url", "slug", "name", "location"]] = keys_filter[["acronym", "image_url", "slug", "name", "location"]].astype(str)
+
+    # Suppression des lignes dupliquées
     cleaned_dataframe = keys_filter.drop_duplicates()
 
     return cleaned_dataframe

@@ -26,12 +26,15 @@ def fetch_raw_tournament_participants(tournament):
     return rosters
 
 
-def fetch_raw_players(team):
+def fetch_raw_players_from_team(team):
     url = f"{API_URL}/teams/{team}"
 
-    players = requests.get(url, headers=HEADER).json()
+    team = requests.get(url, headers=HEADER).json()
 
-    return players
+    players = team["players"]
+    team_id = team["id"]
+
+    return team_id, players
 
 
 def fetch_raw_team(team):
