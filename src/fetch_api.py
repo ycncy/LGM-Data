@@ -1,5 +1,5 @@
 import requests
-from config import API_URL, HEADER
+from data.api_config import API_URL, HEADER
 
 
 def fetch_raw_series(videogame):
@@ -29,7 +29,7 @@ def fetch_raw_tournament_participants(tournament):
 def fetch_raw_players(team):
     url = f"{API_URL}/teams/{team}"
 
-    players = requests.get(url, headers=HEADER).json()["players"]
+    players = requests.get(url, headers=HEADER).json()
 
     return players
 

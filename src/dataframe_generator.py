@@ -1,7 +1,4 @@
-import sys
 from dataframe_cleaner import *
-
-sys.path.append('../data/')
 
 
 def process_series(series):
@@ -40,6 +37,13 @@ def process_tournaments_participants(tournaments):
     return cleaned_dataframe
 
 
-from data import fetch_api as api
+def process_players(team):
+    first_dataframe = pd.json_normalize(team)
 
-process_tournaments_participants(api.fetch_raw_tournament_participants("10434"))
+    cleaned_dataframe = clean_players_dataframe(first_dataframe)
+
+    return cleaned_dataframe
+
+
+from src import fetch_api as api
+process_players(api.fetch_raw_players("128298"))

@@ -60,6 +60,30 @@ def clean_tournaments_participants_dataframe(tournament_dataframe):
     #Suppression des lignes dupliquées
     cleaned_dataframe = dataframe.drop_duplicates()
 
-    print(cleaned_dataframe.dtypes)
+    return cleaned_dataframe
+
+
+def clean_players_dataframe(players_dataframe):
+    #On garde uniquement l'id de l'équipe et la liste de ses joueurs
+    keys_filter = players_dataframe.filter(["id", "players"])
+    team_id = players_dataframe["id"][0]
+
+    #On créé le dataframe content les informations sur chaque joueur
+    players_without_team_dataframe = pd.DataFrame(keys_filter["players"][0])
+
+    #On retire les colonne inutile
+    keys_filter_players_without_team_dataframe = players_without_team_dataframe.drop(["modified_at", "birthday"], axis=1)
+
+    #On ajoute l'id de l'équipe à chaque joueur
+    keys_filter_players_without_team_dataframe["team_id"] = team_id
+    keys_filter = keys_filter_players_without_team_dataframe
+
+    #Conversion des colonnes dans les types souhaités
+    keys_filter[["first_name", "last_name", "nationality", "slug", "role", "image_url", "name"]] = keys_filter[["first_name", "last_name", "nationality", "slug", "role", "image_url", "name"]].astype(str)
+    keys_filter["age"] = keys_filter["age"].fillna(999).astype(int)
+    keys_filter[["id", "team_id"]] = keys_filter[["id", "team_id"]].astype(int)
+
+    #Suppression des lignes dupliquées
+    cleaned_dataframe = keys_filter.drop_duplicates()
 
     return cleaned_dataframe
