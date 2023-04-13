@@ -119,8 +119,3 @@ def clean_teams_dataframe(team_dataframe):
     cleaned_dataframe = keys_filter.drop_duplicates()
 
     return cleaned_dataframe
-
-
-from src import fetch_api as api
-
-clean_videogames_dataframe(api.fetch_raw_videogame("valorant"))
