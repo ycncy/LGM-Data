@@ -63,4 +63,5 @@ def process_team(team):
 
 
 from src import fetch_api as api
+
 print(process_videogame(api.fetch_raw_videogame("valorant")))
