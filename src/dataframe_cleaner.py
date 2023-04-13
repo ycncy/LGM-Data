@@ -15,9 +15,9 @@ def clean_videogame_dataframe(videogame_dataframe):
     return cleaned_dataframe
 
 
-def clean_series_dataframe(series_dataframe):
+def clean_serie_dataframe(serie_dataframe):
     # On récupère ici uniquement les colonnes que l'on veut garder dans la table finale
-    keys_filter = series_dataframe.filter(items=["id", "league_id", "full_name", "slug", "begin_at", "end_at"])
+    keys_filter = serie_dataframe.filter(items=["id", "league_id", "full_name", "slug", "begin_at", "end_at"])
 
     # Conversion des colonnes dans les types souhaités
     keys_filter[["id", "league_id"]] = keys_filter[["id", "league_id"]].apply(pd.to_numeric)
@@ -51,6 +51,44 @@ def clean_matches_dataframe(matches_dataframe):
     keys_filter["original_scheduled_at"] = pd.to_datetime(keys_filter["original_scheduled_at"],
                                                           format="%Y-%m-%dT%H:%M:%SZ")
     keys_filter["scheduled_at"] = pd.to_datetime(keys_filter["scheduled_at"], format="%Y-%m-%dT%H:%M:%SZ")
+
+    # Suppression des lignes dupliquées
+    cleaned_dataframe = keys_filter.drop_duplicates()
+
+    return cleaned_dataframe
+
+def clean_game_dataframe(games_dataframe):
+    # On récupère ici uniquement les colonnes que l'on veut garder dans la table finale
+    keys_filter = games_dataframe.filter(
+        items=["id", "begin_at", "end_at", "match_id", "finished", "winner.id", "forfeit", "length", "complete"])
+
+    # Conversion des colonnes dans les types souhaités
+    keys_filter[["id", "match_id", "winner.id", "length"]] = keys_filter[
+        ["id", "match_id", "winner.id", "length"]].apply(pd.to_numeric)
+
+    keys_filter[["finished", "forfeit", "complete"]] = keys_filter[["finished", "forfeit", "complete"]].astype(bool)
+
+    keys_filter["begin_at"] = pd.to_datetime(keys_filter["begin_at"], format="%Y-%m-%dT%H:%M:%SZ")
+    keys_filter["end_at"] = pd.to_datetime(keys_filter["end_at"], format="%Y-%m-%dT%H:%M:%SZ")
+
+    # Suppression des lignes dupliquées
+    cleaned_dataframe = keys_filter.drop_duplicates()
+
+    return cleaned_dataframe
+
+
+def clean_tournament_dataframe(tournament_dataframe):
+    # On récupère ici uniquement les colonnes que l'on veut garder dans la table finale
+    keys_filter = tournament_dataframe.filter(
+        items=["id", "slug", "begin_at", "end_at", "name", "serie_id", "winner_id", "tier", "has_bracket", "prizepool"])
+
+    # Conversion des colonnes dans les types souhaités
+    keys_filter[["id", "serie_id", "winner_id", "prizepool"]] = keys_filter[
+        ["id", "serie_id", "winner_id", "prizepool"]].apply(pd.to_numeric)
+    keys_filter[["name", "slug", "tier"]] = keys_filter[["name", "slug", "tier"]].astype(str)
+    keys_filter["has_bracket"] = keys_filter["has_bracket"].astype(bool)
+    keys_filter["begin_at"] = pd.to_datetime(keys_filter["begin_at"], format="%Y-%m-%dT%H:%M:%SZ")
+    keys_filter["end_at"] = pd.to_datetime(keys_filter["end_at"], format="%Y-%m-%dT%H:%M:%SZ")
 
     # Suppression des lignes dupliquées
     cleaned_dataframe = keys_filter.drop_duplicates()
@@ -95,8 +133,9 @@ def clean_players_dataframe(team_and_players):
 
     # Conversion des colonnes dans les types souhaités
     keys_filter_teams_dataframe[["first_name", "last_name", "nationality", "slug", "role", "image_url", "name"]] = \
-    keys_filter_teams_dataframe[["first_name", "last_name", "nationality", "slug", "role", "image_url", "name"]].astype(
-        str)
+        keys_filter_teams_dataframe[
+            ["first_name", "last_name", "nationality", "slug", "role", "image_url", "name"]].astype(
+            str)
     keys_filter_teams_dataframe["age"] = keys_filter_teams_dataframe["age"].fillna(999).astype(int)
     keys_filter_teams_dataframe[["id", "team_id"]] = keys_filter_teams_dataframe[["id", "team_id"]].astype(int)
 

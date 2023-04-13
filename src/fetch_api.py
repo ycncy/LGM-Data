@@ -5,9 +5,9 @@ from data.api_config import API_URL, HEADER
 def fetch_raw_videogame(videogame):
     url = f"{API_URL}/videogames/{videogame}"
 
-    game = requests.get(url, headers=HEADER).json()
+    game_info = requests.get(url, headers=HEADER).json()
 
-    return game
+    return game_info
 
 
 def fetch_raw_series(videogame):
@@ -26,12 +26,20 @@ def fetch_raw_matches(tournament):
     return matches
 
 
-def fetch_raw_tournament_participants(tournament):
+def fetch_raw_games(match):
+    url = f"{API_URL}/matches/{match}"
+
+    games = requests.get(url, headers=HEADER).json()["games"]
+
+    return games
+
+
+def fetch_raw_tournament(tournament):
     url = f"{API_URL}/tournaments/{tournament}"
 
-    rosters = requests.get(url, headers=HEADER).json()
+    raw_tournament = requests.get(url, headers=HEADER).json()
 
-    return rosters
+    return raw_tournament
 
 
 def fetch_raw_players_from_team(team):
@@ -51,3 +59,6 @@ def fetch_raw_team(team):
     raw_team = requests.get(url, headers=HEADER).json()
 
     return raw_team
+
+
+print(fetch_raw_series("valorant"))

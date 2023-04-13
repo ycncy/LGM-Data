@@ -1,4 +1,5 @@
 from dataframe_cleaner import *
+from src import fetch_api as api
 
 
 def process_videogame(videogame):
@@ -9,36 +10,40 @@ def process_videogame(videogame):
     return cleaned_dataframe
 
 
-def process_series(series):
-    dataframes = []
-    for elements in series:
-        first_dataframe = pd.json_normalize(elements)
+def process_serie(serie):
+    first_dataframe = pd.json_normalize(serie)
 
-        cleaned_dataframe = clean_series_dataframe(first_dataframe)
+    cleaned_dataframe = clean_serie_dataframe(first_dataframe)
 
-        dataframes.append(cleaned_dataframe)
-
-    series_dataframe = pd.concat(dataframes)
-
-    return series_dataframe
+    return cleaned_dataframe
 
 
-def process_matches(matches):
-    dataframes = []
-    for elements in matches:
-        first_dataframe = pd.json_normalize(elements)
+def process_matche(match):
+    first_dataframe = pd.json_normalize(match)
 
-        cleaned_dataframe = clean_matches_dataframe(first_dataframe)
+    cleaned_dataframe = clean_serie_dataframe(first_dataframe)
 
-        dataframes.append(cleaned_dataframe)
-
-    matches_dataframe = pd.concat(dataframes)
-
-    return matches_dataframe
+    return cleaned_dataframe
 
 
-def process_tournaments_participants(tournaments):
-    first_dataframe = pd.json_normalize(tournaments)
+def process_tournament(tournament):
+    first_dataframe = pd.json_normalize(tournament)
+
+    cleaned_dataframe = clean_tournament_dataframe(first_dataframe)
+
+    return cleaned_dataframe
+
+
+def process_game(game):
+    first_dataframe = pd.json_normalize(game)
+
+    cleaned_dataframe = clean_game_dataframe(first_dataframe)
+
+    return cleaned_dataframe
+
+
+def process_tournament_participants(tournament):
+    first_dataframe = pd.json_normalize(tournament)
 
     cleaned_dataframe = clean_tournaments_participants_dataframe(first_dataframe)
 
@@ -62,6 +67,4 @@ def process_team(team):
     return cleaned_dataframe
 
 
-from src import fetch_api as api
-
-print(process_videogame(api.fetch_raw_videogame("valorant")))
+print(process_game(api.fetch_raw_games("589417")))
