@@ -1,6 +1,20 @@
 import pandas as pd
 
 
+def clean_videogame_dataframe(videogame_dataframe):
+    # On récupère uniquement les colonnes de la base de données finale
+    keys_filter = videogame_dataframe.filter(items=["id", "name", "slug", "current_version"])
+
+    # Conversion des colonnes dans les types souhaités
+    keys_filter["id"] = keys_filter["id"].astype(int)
+    keys_filter[["current_version", "slug", "name"]] = keys_filter[["current_version", "slug", "name"]].astype(str)
+
+    # Suppression des lignes dupliquées
+    cleaned_dataframe = keys_filter.drop_duplicates()
+
+    return cleaned_dataframe
+
+
 def clean_series_dataframe(series_dataframe):
     #On récupère ici uniquement les colonnes que l'on veut garder dans la table finale
     keys_filter = series_dataframe.filter(items=["id", "league_id", "full_name", "slug", "begin_at", "end_at"])

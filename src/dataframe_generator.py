@@ -1,6 +1,14 @@
 from dataframe_cleaner import *
 
 
+def process_videogame(videogame):
+    first_dataframe = pd.json_normalize(videogame)
+
+    cleaned_dataframe = clean_videogame_dataframe(first_dataframe)
+
+    return cleaned_dataframe
+
+
 def process_series(series):
     dataframes = []
     for elements in series:
@@ -55,4 +63,4 @@ def process_team(team):
 
 
 from src import fetch_api as api
-process_players(api.fetch_raw_players_from_team("128298"))
+print(process_videogame(api.fetch_raw_videogame("valorant")))
