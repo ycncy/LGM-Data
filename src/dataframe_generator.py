@@ -1,32 +1,49 @@
 from dataframe_cleaner import *
+import pandas as pd
 from src import fetch_api as api
 
 
 def process_videogame(videogame):
     first_dataframe = pd.json_normalize(videogame)
 
+    if hasattr(pd.DataFrame(first_dataframe.leagues[0]), 'id'):
+        id_list = pd.DataFrame(first_dataframe.leagues[0]).id.to_list()
+    else:
+        id_list = []
+
     cleaned_dataframe = clean_videogame_dataframe(first_dataframe)
 
-    return cleaned_dataframe
+    return cleaned_dataframe, id_list
 
 
 def process_league(league):
-    first_dataframe = pd.json_normalize(league)
+    first_dataframe = pd.json_normalize(league[0])
+    first_dataframe["videogame_id"] = league[1]
+
+    if hasattr(pd.DataFrame(first_dataframe.series[0]), 'id'):
+        id_list = pd.DataFrame(first_dataframe.series[0]).id.to_list()
+    else:
+        id_list = []
 
     cleaned_dataframe = clean_league_dataframe(first_dataframe)
 
-    return cleaned_dataframe
+    return cleaned_dataframe, id_list
 
 
 def process_serie(serie):
     first_dataframe = pd.json_normalize(serie)
 
+    if hasattr(pd.DataFrame(first_dataframe.tournaments[0]), 'id'):
+        id_list = pd.DataFrame(first_dataframe.tournaments[0]).id.to_list()
+    else:
+        id_list = []
+
     cleaned_dataframe = clean_serie_dataframe(first_dataframe)
 
-    return cleaned_dataframe
+    return cleaned_dataframe, id_list
 
 
-def process_matche(match):
+def process_match(match):
     first_dataframe = pd.json_normalize(match)
 
     cleaned_dataframe = clean_serie_dataframe(first_dataframe)
@@ -37,9 +54,14 @@ def process_matche(match):
 def process_tournament(tournament):
     first_dataframe = pd.json_normalize(tournament)
 
+    if hasattr(pd.DataFrame(first_dataframe.matches[0]), 'id'):
+        id_list = pd.DataFrame(first_dataframe.matches[0]).id.to_list()
+    else:
+        id_list = []
+
     cleaned_dataframe = clean_tournament_dataframe(first_dataframe)
 
-    return cleaned_dataframe
+    return cleaned_dataframe, id_list
 
 
 def process_game(game):
@@ -73,6 +95,7 @@ def process_team(team):
     cleaned_dataframe = clean_teams_dataframe(first_dataframe)
 
     return cleaned_dataframe
+
 
 def process_stream(match):
     first_dataframe = pd.json_normalize(match)

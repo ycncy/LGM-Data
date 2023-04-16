@@ -12,22 +12,24 @@ def clean_videogame_dataframe(videogame_dataframe):
     # Suppression des lignes dupliquées
     cleaned_dataframe = keys_filter.drop_duplicates()
 
+    cleaned_dataframe.set_index("id", inplace=True)
+
     return cleaned_dataframe
 
 
 def clean_league_dataframe(league_dataframe):
     # On récupère ici uniquement les colonnes que l'on veut garder dans la table finale
-    keys_filter = league_dataframe.filter(
-        items=["id", "image_url", "name"])
+    keys_filter = league_dataframe.filter(items=["id", "image_url", "name", "videogame_id"])
 
     # Conversion des colonnes dans les types souhaités
-    keys_filter["id"] = keys_filter[
-        "id"].apply(pd.to_numeric)
+    keys_filter["id"] = keys_filter["id"].apply(pd.to_numeric)
 
     keys_filter[["name", "image_url"]] = keys_filter[["name", "image_url"]].astype(str)
 
     # Suppression des lignes dupliquées
     cleaned_dataframe = keys_filter.drop_duplicates()
+
+    cleaned_dataframe.set_index("id", inplace=True)
 
     return cleaned_dataframe
 
@@ -101,8 +103,8 @@ def clean_tournament_dataframe(tournament_dataframe):
         items=["id", "slug", "begin_at", "end_at", "name", "serie_id", "winner_id", "tier", "has_bracket", "prizepool"])
 
     # Conversion des colonnes dans les types souhaités
-    keys_filter[["id", "serie_id", "winner_id", "prizepool"]] = keys_filter[
-        ["id", "serie_id", "winner_id", "prizepool"]].apply(pd.to_numeric)
+    keys_filter[["id", "serie_id", "winner_id"]] = keys_filter[
+        ["id", "serie_id", "winner_id"]].apply(pd.to_numeric)
     keys_filter[["name", "slug", "tier"]] = keys_filter[["name", "slug", "tier"]].astype(str)
     keys_filter["has_bracket"] = keys_filter["has_bracket"].astype(bool)
     keys_filter["begin_at"] = pd.to_datetime(keys_filter["begin_at"], format="%Y-%m-%dT%H:%M:%SZ")
@@ -181,7 +183,6 @@ def clean_teams_dataframe(team_dataframe):
 def clean_stream_dataframe(match_dataframe):
     # On récupère uniquement les colonnes de la base de données finale
     keys_filter = match_dataframe.filter([["streams_list", "id"]])
-
 
     # Suppression des lignes dupliquées
     cleaned_dataframe = keys_filter.drop_duplicates()
