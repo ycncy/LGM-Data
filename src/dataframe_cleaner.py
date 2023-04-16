@@ -47,44 +47,41 @@ def clean_serie_dataframe(serie_dataframe):
     # Suppression des lignes dupliquées
     cleaned_dataframe = keys_filter.drop_duplicates()
 
+    cleaned_dataframe.set_index("id", inplace=True)
+
     return cleaned_dataframe
 
 
 def clean_matches_dataframe(matches_dataframe):
     # On récupère ici uniquement les colonnes que l'on veut garder dans la table finale
-    keys_filter = matches_dataframe.filter(
-        items=["id", "name", "slug", "match_type", "number_of_games", "tournament_id", "status", "draw", "winner_id",
-               "original_scheduled_at", "scheduled_at", "begin_at", "end_at"])
+    keys_filter = matches_dataframe.filter(items=["id", "name", "slug", "match_type", "number_of_games", "tournament_id", "status", "draw", "winner_id", "original_scheduled_at", "scheduled_at", "begin_at", "end_at"])
 
     # Conversion des colonnes dans les types souhaités
-    keys_filter[["id", "tournament_id", "winner_id", "number_of_games"]] = keys_filter[
-        ["id", "tournament_id", "winner_id", "number_of_games"]].apply(pd.to_numeric)
+    keys_filter[["id", "tournament_id", "winner_id", "number_of_games"]] = keys_filter[["id", "tournament_id", "winner_id", "number_of_games"]].apply(pd.to_numeric)
 
-    keys_filter[["slug", "status", "name", "match_type"]] = keys_filter[
-        ["slug", "status", "name", "match_type"]].astype(str)
+    keys_filter[["slug", "status", "name", "match_type"]] = keys_filter[["slug", "status", "name", "match_type"]].astype(str)
 
     keys_filter["draw"] = keys_filter["draw"].astype(bool)
 
     keys_filter["begin_at"] = pd.to_datetime(keys_filter["begin_at"], format="%Y-%m-%dT%H:%M:%SZ")
     keys_filter["end_at"] = pd.to_datetime(keys_filter["end_at"], format="%Y-%m-%dT%H:%M:%SZ")
-    keys_filter["original_scheduled_at"] = pd.to_datetime(keys_filter["original_scheduled_at"],
-                                                          format="%Y-%m-%dT%H:%M:%SZ")
+    keys_filter["original_scheduled_at"] = pd.to_datetime(keys_filter["original_scheduled_at"], format="%Y-%m-%dT%H:%M:%SZ")
     keys_filter["scheduled_at"] = pd.to_datetime(keys_filter["scheduled_at"], format="%Y-%m-%dT%H:%M:%SZ")
 
     # Suppression des lignes dupliquées
     cleaned_dataframe = keys_filter.drop_duplicates()
+
+    cleaned_dataframe.set_index("id", inplace=True)
 
     return cleaned_dataframe
 
 
 def clean_game_dataframe(games_dataframe):
     # On récupère ici uniquement les colonnes que l'on veut garder dans la table finale
-    keys_filter = games_dataframe.filter(
-        items=["id", "begin_at", "end_at", "match_id", "finished", "winner.id", "forfeit", "length", "complete"])
+    keys_filter = games_dataframe.filter(items=["id", "begin_at", "end_at", "match_id", "finished", "winner.id", "forfeit", "length", "complete"])
 
     # Conversion des colonnes dans les types souhaités
-    keys_filter[["id", "match_id", "winner.id", "length"]] = keys_filter[
-        ["id", "match_id", "winner.id", "length"]].apply(pd.to_numeric)
+    keys_filter[["id", "match_id", "winner.id", "length"]] = keys_filter[["id", "match_id", "winner.id", "length"]].apply(pd.to_numeric)
 
     keys_filter[["finished", "forfeit", "complete"]] = keys_filter[["finished", "forfeit", "complete"]].astype(bool)
 
@@ -94,17 +91,17 @@ def clean_game_dataframe(games_dataframe):
     # Suppression des lignes dupliquées
     cleaned_dataframe = keys_filter.drop_duplicates()
 
+    cleaned_dataframe.set_index("id", inplace=True)
+
     return cleaned_dataframe
 
 
 def clean_tournament_dataframe(tournament_dataframe):
     # On récupère ici uniquement les colonnes que l'on veut garder dans la table finale
-    keys_filter = tournament_dataframe.filter(
-        items=["id", "slug", "begin_at", "end_at", "name", "serie_id", "winner_id", "tier", "has_bracket", "prizepool"])
+    keys_filter = tournament_dataframe.filter(items=["id", "slug", "begin_at", "end_at", "name", "serie_id", "winner_id", "tier", "has_bracket", "prizepool"])
 
     # Conversion des colonnes dans les types souhaités
-    keys_filter[["id", "serie_id", "winner_id"]] = keys_filter[
-        ["id", "serie_id", "winner_id"]].apply(pd.to_numeric)
+    keys_filter[["id", "serie_id", "winner_id"]] = keys_filter[["id", "serie_id", "winner_id"]].apply(pd.to_numeric)
     keys_filter[["name", "slug", "tier"]] = keys_filter[["name", "slug", "tier"]].astype(str)
     keys_filter["has_bracket"] = keys_filter["has_bracket"].astype(bool)
     keys_filter["begin_at"] = pd.to_datetime(keys_filter["begin_at"], format="%Y-%m-%dT%H:%M:%SZ")
@@ -112,6 +109,8 @@ def clean_tournament_dataframe(tournament_dataframe):
 
     # Suppression des lignes dupliquées
     cleaned_dataframe = keys_filter.drop_duplicates()
+
+    cleaned_dataframe.set_index("id", inplace=True)
 
     return cleaned_dataframe
 
@@ -152,10 +151,7 @@ def clean_players_dataframe(team_and_players):
     keys_filter_teams_dataframe = keys_filter_players_dataframe
 
     # Conversion des colonnes dans les types souhaités
-    keys_filter_teams_dataframe[["first_name", "last_name", "nationality", "slug", "role", "image_url", "name"]] = \
-        keys_filter_teams_dataframe[
-            ["first_name", "last_name", "nationality", "slug", "role", "image_url", "name"]].astype(
-            str)
+    keys_filter_teams_dataframe[["first_name", "last_name", "nationality", "slug", "role", "image_url", "name"]] = keys_filter_teams_dataframe[["first_name", "last_name", "nationality", "slug", "role", "image_url", "name"]].astype(str)
     keys_filter_teams_dataframe["age"] = keys_filter_teams_dataframe["age"].fillna(999).astype(int)
     keys_filter_teams_dataframe[["id", "team_id"]] = keys_filter_teams_dataframe[["id", "team_id"]].astype(int)
 
@@ -171,11 +167,12 @@ def clean_teams_dataframe(team_dataframe):
 
     # Conversion des colonnes dans les types souhaités
     keys_filter["id"] = keys_filter["id"].astype(int)
-    keys_filter[["acronym", "image_url", "slug", "name", "location"]] = keys_filter[
-        ["acronym", "image_url", "slug", "name", "location"]].astype(str)
+    keys_filter[["acronym", "image_url", "slug", "name", "location"]] = keys_filter[["acronym", "image_url", "slug", "name", "location"]].astype(str)
 
     # Suppression des lignes dupliquées
     cleaned_dataframe = keys_filter.drop_duplicates()
+
+    cleaned_dataframe.set_index("id", inplace=True)
 
     return cleaned_dataframe
 
