@@ -10,6 +10,14 @@ def process_videogame(videogame):
     return cleaned_dataframe
 
 
+def process_league(league):
+    first_dataframe = pd.json_normalize(league)
+
+    cleaned_dataframe = clean_league_dataframe(first_dataframe)
+
+    return cleaned_dataframe
+
+
 def process_serie(serie):
     first_dataframe = pd.json_normalize(serie)
 
@@ -66,5 +74,9 @@ def process_team(team):
 
     return cleaned_dataframe
 
+def process_stream(match):
+    first_dataframe = pd.json_normalize(match)
 
-print(process_game(api.fetch_raw_games("589417")))
+    cleaned_dataframe = clean_stream_dataframe(first_dataframe)
+
+    return cleaned_dataframe

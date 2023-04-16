@@ -10,12 +10,28 @@ def fetch_raw_videogame(videogame):
     return game_info
 
 
+def fetch_raw_league(league):
+    url = f"{API_URL}/leagues/{league}"
+
+    game_info = requests.get(url, headers=HEADER).json()
+
+    return game_info
+
+
 def fetch_raw_series(videogame):
     url = f"{API_URL}/videogames/{videogame}/series?sort=&page=1&per_page=50"
 
     series = requests.get(url, headers=HEADER).json()
 
     return series
+
+
+def fetch_raw_tournament(tournament):
+    url = f"{API_URL}/tournaments/{tournament}"
+
+    raw_tournament = requests.get(url, headers=HEADER).json()
+
+    return raw_tournament
 
 
 def fetch_raw_matches(tournament):
@@ -32,14 +48,6 @@ def fetch_raw_games(match):
     games = requests.get(url, headers=HEADER).json()["games"]
 
     return games
-
-
-def fetch_raw_tournament(tournament):
-    url = f"{API_URL}/tournaments/{tournament}"
-
-    raw_tournament = requests.get(url, headers=HEADER).json()
-
-    return raw_tournament
 
 
 def fetch_raw_players_from_team(team):
@@ -60,5 +68,7 @@ def fetch_raw_team(team):
 
     return raw_team
 
-
-print(fetch_raw_series("valorant"))
+print(fetch_raw_games("5450"))
+#league vcl 4947
+#serie spain 5450
+#match 582010

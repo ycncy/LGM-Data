@@ -15,6 +15,23 @@ def clean_videogame_dataframe(videogame_dataframe):
     return cleaned_dataframe
 
 
+def clean_league_dataframe(league_dataframe):
+    # On récupère ici uniquement les colonnes que l'on veut garder dans la table finale
+    keys_filter = league_dataframe.filter(
+        items=["id", "image_url", "name"])
+
+    # Conversion des colonnes dans les types souhaités
+    keys_filter["id"] = keys_filter[
+        "id"].apply(pd.to_numeric)
+
+    keys_filter[["name", "image_url"]] = keys_filter[["name", "image_url"]].astype(str)
+
+    # Suppression des lignes dupliquées
+    cleaned_dataframe = keys_filter.drop_duplicates()
+
+    return cleaned_dataframe
+
+
 def clean_serie_dataframe(serie_dataframe):
     # On récupère ici uniquement les colonnes que l'on veut garder dans la table finale
     keys_filter = serie_dataframe.filter(items=["id", "league_id", "full_name", "slug", "begin_at", "end_at"])
@@ -56,6 +73,7 @@ def clean_matches_dataframe(matches_dataframe):
     cleaned_dataframe = keys_filter.drop_duplicates()
 
     return cleaned_dataframe
+
 
 def clean_game_dataframe(games_dataframe):
     # On récupère ici uniquement les colonnes que l'on veut garder dans la table finale
@@ -153,6 +171,17 @@ def clean_teams_dataframe(team_dataframe):
     keys_filter["id"] = keys_filter["id"].astype(int)
     keys_filter[["acronym", "image_url", "slug", "name", "location"]] = keys_filter[
         ["acronym", "image_url", "slug", "name", "location"]].astype(str)
+
+    # Suppression des lignes dupliquées
+    cleaned_dataframe = keys_filter.drop_duplicates()
+
+    return cleaned_dataframe
+
+
+def clean_stream_dataframe(match_dataframe):
+    # On récupère uniquement les colonnes de la base de données finale
+    keys_filter = match_dataframe.filter([["streams_list", "id"]])
+
 
     # Suppression des lignes dupliquées
     cleaned_dataframe = keys_filter.drop_duplicates()
