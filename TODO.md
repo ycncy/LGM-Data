@@ -2,7 +2,7 @@
 
 - [ ] MODIFIER LES APPELS API (Pas grand chose, il faut un get d'un seul éléments par son id)<br><br>
 -  [ ] SET TOUS LES INDEX A ID DANS LE CLEANER<br><br>
--  [ ] FINIR STREAM ET OPPONENT (comme videogame_id dans process_league)<br><br>
+-  [ ] FINIR STREAM ET OPPONENT (comme videogame_id dans process_league) LES DEUX SONT DANS LES APPELS API DE MATCH DONC POUR CHAQUE MATCH FAUDRA RECUPERER STREAMS ET OPPONENTS :))<br><br>
 -  [ ] TROUVER UNE SOLUTION POUR LA COMPLEXITE DU MAIN<br><br>
 -  [ ] BOUCLER SUR TOUT CE QUI EST POSSIBLE<br><br>
 -  [ ] CHANGER TOUTES LES FONCTIONS PROCESS (nom, param, et récupérer les id du successeur)<br><br>

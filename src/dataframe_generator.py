@@ -43,14 +43,6 @@ def process_serie(serie):
     return cleaned_dataframe, id_list
 
 
-def process_match(match):
-    first_dataframe = pd.json_normalize(match)
-
-    cleaned_dataframe = clean_serie_dataframe(first_dataframe)
-
-    return cleaned_dataframe
-
-
 def process_tournament(tournament):
     first_dataframe = pd.json_normalize(tournament)
 
@@ -60,6 +52,19 @@ def process_tournament(tournament):
         id_list = []
 
     cleaned_dataframe = clean_tournament_dataframe(first_dataframe)
+
+    return cleaned_dataframe, id_list
+
+
+def process_match(match):
+    first_dataframe = pd.json_normalize(match)
+
+    if hasattr(pd.DataFrame(first_dataframe.match[0]), 'id'):
+        id_list = pd.DataFrame(first_dataframe.match[0]).id.to_list()
+    else:
+        id_list = []
+
+    cleaned_dataframe = clean_serie_dataframe(first_dataframe)
 
     return cleaned_dataframe, id_list
 
