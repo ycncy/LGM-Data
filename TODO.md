@@ -2,10 +2,10 @@
 
 - [x] MODIFIER LES APPELS API (Pas grand chose, il faut un get d'un seul éléments par son id)<br>ILS ETAIENT DEJA BIEN ENFT<br><br>
 -  [x] SET TOUS LES INDEX A ID DANS LE CLEANER<br><br>
--  [ ] FINIR STREAM ET OPPONENT (comme videogame_id dans process_league) LES DEUX SONT DANS LES APPELS API DE MATCH DONC POUR CHAQUE MATCH FAUDRA RECUPERER STREAMS ET OPPONENTS :))<br><br>
+-  [x] FINIR STREAM ET OPPONENT (comme videogame_id dans process_league) LES DEUX SONT DANS LES APPELS API DE MATCH DONC POUR CHAQUE MATCH FAUDRA RECUPERER STREAMS ET OPPONENTS :))<br><br>
 -  [ ] TROUVER UNE SOLUTION POUR LA COMPLEXITE DU MAIN<br><br>
--  [ ] BOUCLER SUR TOUT CE QUI EST POSSIBLE<br><br>
--  [ ] CHANGER TOUTES LES FONCTIONS PROCESS (nom, param, et récupérer les id du successeur)<br><br>
+-  [x] BOUCLER SUR TOUT CE QUI EST POSSIBLE<br><br> CA MARCHE !!!!!!!!!
+-  [x] CHANGER TOUTES LES FONCTIONS PROCESS (nom, param, et récupérer les id du successeur)<br><br>
 -  [ ] AJOUTER DES COMMENTAIRES CLAIRS ET REVOIR LA STRUCTURE DU CODE (et peut-être rename certains fichier)<br><br>
 -  [ ] CREER LE PROGRAMME QUI CHANGE DE CLEFS AU BON MOMENT<br><br>
 -  [ ] AUGMENTER LE SET DE CLEFS ET TENTER DE LANCER LE PROGRAMME COMPLET
