@@ -9,7 +9,6 @@ def clean_videogame_dataframe(videogame_info):
 
     # Conversion des colonnes dans les types souhaités
     keys_filter["id"] = keys_filter["id"].astype(int)
-    keys_filter["current_version"] = keys_filter["current_version"].astype(float)
     keys_filter[["slug", "name"]] = keys_filter[["slug", "name"]].astype(str)
 
     # Suppression des lignes dupliquées
