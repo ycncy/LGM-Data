@@ -69,34 +69,39 @@ class DataExtractor:
 
         return tournaments_raw_df
 
-    def fetch_raw_matches_from_tournaments_id_list(self, tournaments_id_list):
+    def fetch_raw_all_matches_infos_from_tournaments_id_list(self, tournaments_id_list):
         matches_raw_infos = []
+        matches_streams_raw_df = pd.DataFrame()
+        matches_games_raw_df = pd.DataFrame()
+        matches_opponents_raw_df = pd.DataFrame()
 
         for tournament_id in tournaments_id_list:
             url = f"{self.api_url}/tournaments/{tournament_id}/matches"
 
             match_info = requests.get(url, headers=self.header).json()
+
+            tournament_matches_streams_df = pd.DataFrame()
+            tournament_matches_games_df = pd.DataFrame()
+            tournament_matches_opponents_df = pd.DataFrame()
+            for match in match_info:
+                pd.concat([tournament_matches_streams_df, pd.json_normalize(match["streams_list"])])
+                pd.concat([tournament_matches_games_df, pd.json_normalize(match["games"])])
+                pd.concat([tournament_matches_opponents_df, pd.json_normalize(match["opponents"])])
+
+                tournament_matches_opponents_df["match_id"] = match["id"]
+                tournament_matches_streams_df["match_id"] = match["id"]
+
             matches_raw_infos.extend(match_info)
+
+            pd.concat([matches_streams_raw_df, tournament_matches_streams_df])
+            pd.concat([matches_games_raw_df, tournament_matches_games_df])
+            pd.concat([matches_opponents_raw_df, tournament_matches_opponents_df])
 
         matches_raw_df = pd.json_normalize(matches_raw_infos)
 
-        return matches_raw_df
+        return {"matches_raw_df": matches_raw_df, "matches_streams_raw_df": matches_streams_raw_df, "matches_games_raw_df": matches_games_raw_df, "matches_opponents_raw_df": matches_opponents_raw_df}
 
-    def fetch_raw_games_from_matches_id_list(self, matches_id_list):
-        games_raw_infos = []
-
-        for match_id in matches_id_list:
-            url = f"{self.api_url}/matches/{match_id}"
-
-            games_info = requests.get(url, headers=self.header).json()["games"]
-
-            games_raw_infos.extend(games_info)
-
-        games_raw_df = pd.json_normalize(games_raw_infos)
-
-        return games_raw_df
-
-    def fetch_raw_teams_from_tournaments_id_list(self, tournaments_id_list):
+    def fetch_raw_teams(self, tournaments_id_list):
         teams_raw_infos = []
 
         for tournament_id in tournaments_id_list:
@@ -124,18 +129,3 @@ class DataExtractor:
             players_raw_df = pd.concat([players_raw_df, temp_players_df])
 
         return players_raw_df
-
-    def fetch_raw_stream_from_matches_id_list(self, matches_id_list):
-        streams_raw_df = pd.DataFrame()
-
-        for match_id in matches_id_list:
-            url = f"{self.api_url}/matches/{match_id}"
-
-            raw_stream = requests.get(url, headers=self.header).json()
-
-            temp_streams_raw_df = pd.json_normalize(raw_stream["streams_list"])
-            temp_streams_raw_df["match_id"] = raw_stream["id"]
-
-            pd.concat([streams_raw_df, temp_streams_raw_df])
-
-        return streams_raw_df
