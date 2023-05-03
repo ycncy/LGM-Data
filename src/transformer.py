@@ -79,17 +79,16 @@ def clean_matches_dataframe(matches_raw_df):
     # On récupère ici uniquement les colonnes que l'on veut garder dans la table finale
     keys_filter = matches_raw_df.filter(items=["id", "name", "slug", "match_type", "number_of_games", "tournament_id", "status", "draw", "winner_id", "original_scheduled_at", "scheduled_at", "begin_at", "end_at", "games_id_list"])
 
+    keys_filter = keys_filter[pd.notnull(keys_filter.id)]
+
+    keys_filter.fillna(-1, inplace=True)
+
     # Conversion des colonnes dans les types souhaités
-    keys_filter[["id", "tournament_id", "winner_id", "number_of_games"]] = keys_filter[["id", "tournament_id", "winner_id", "number_of_games"]].apply(pd.to_numeric)
+    keys_filter[["id", "tournament_id", "winner_id", "number_of_games"]] = keys_filter[["id", "tournament_id", "winner_id", "number_of_games"]].astype(int)
 
     keys_filter[["slug", "status", "name", "match_type"]] = keys_filter[["slug", "status", "name", "match_type"]].astype(str)
 
     keys_filter["draw"] = keys_filter["draw"].astype(bool)
-
-    keys_filter["begin_at"] = pd.to_datetime(keys_filter["begin_at"], format="%Y-%m-%dT%H:%M:%SZ")
-    keys_filter["end_at"] = pd.to_datetime(keys_filter["end_at"], format="%Y-%m-%dT%H:%M:%SZ")
-    keys_filter["original_scheduled_at"] = pd.to_datetime(keys_filter["original_scheduled_at"], format="%Y-%m-%dT%H:%M:%SZ")
-    keys_filter["scheduled_at"] = pd.to_datetime(keys_filter["scheduled_at"], format="%Y-%m-%dT%H:%M:%SZ")
 
     # Suppression des lignes dupliquées
     cleaned_dataframe = keys_filter.drop_duplicates()
@@ -104,15 +103,18 @@ def clean_games_dataframe(games_raw_df):
     # On récupère ici uniquement les colonnes que l'on veut garder dans la table finale
     keys_filter = games_raw_df.filter(items=["id", "begin_at", "end_at", "match_id", "finished", "winner.id", "forfeit", "length", "complete"])
 
+    keys_filter.rename(columns={"winner.id": "winner_id"}, inplace=True)
+
     keys_filter.dropna(inplace=True, subset=["begin_at", "end_at"])
 
+    keys_filter[["winner_id", "length"]] = keys_filter[["winner_id", "length"]].fillna(-1)
+    
+
+    keys_filter = keys_filter[pd.notnull(keys_filter.id)]
+
     # Conversion des colonnes dans les types souhaités
-    keys_filter[["id", "match_id", "winner.id", "length"]] = keys_filter[["id", "match_id", "winner.id", "length"]].apply(pd.to_numeric)
-
+    keys_filter[["id", "match_id", "winner_id", "length"]] = keys_filter[["id", "match_id", "winner_id", "length"]].astype(int)
     keys_filter[["finished", "forfeit", "complete"]] = keys_filter[["finished", "forfeit", "complete"]].astype(bool)
-
-    keys_filter["begin_at"] = pd.to_datetime(keys_filter["begin_at"], format="%Y-%m-%dT%H:%M:%SZ")
-    keys_filter["end_at"] = pd.to_datetime(keys_filter["end_at"], format="%Y-%m-%dT%H:%M:%SZ")
 
     # Suppression des lignes dupliquées
     cleaned_dataframe = keys_filter.drop_duplicates()
@@ -130,6 +132,8 @@ def clean_streams_dataframe(streams_raw_df):
     keys_filter["match_id"] = keys_filter["match_id"].astype(int)
     keys_filter["official"] = keys_filter["official"].astype(bool)
 
+    keys_filter.set_index("match_id", inplace=True)
+
     # Suppression des lignes dupliquées
     cleaned_dataframe = keys_filter.drop_duplicates()
 
@@ -138,6 +142,8 @@ def clean_streams_dataframe(streams_raw_df):
 
 def clean_opponents_dataframe(opponents_raw_df):
     opponents_raw_df[["match_id", "home_id", "away_id"]] = opponents_raw_df[["match_id", "home_id", "away_id"]].fillna(-1).astype(int)
+
+    opponents_raw_df.set_index("match_id", inplace=True)
 
     # Suppression des lignes dupliquées
     cleaned_dataframe = opponents_raw_df.drop_duplicates()

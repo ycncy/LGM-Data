@@ -5,12 +5,16 @@ import requests
 import pandas as pd
 
 
+# "mnYh70jlLSFNbN8oyhNyJhCxNIPTkeE0T8LiS4A7tj6M-XjCYH0", "87mdyvzjLRlXdIjHlMzgfXPZs2ZxB6XfUE27sNlhh4byBzWK_HM", "_3Q2-zdmQe1Yp92GWNN3nRYwbSyoD81DTMfC8wxgxLzCprWE28k",
+# "iIQ96kjaO3LAmgkle-hG6sPIuS6qEz6OvS3KogDMq5CUP6Nbl1Y", "4OvqoW8WwOUUNmCOJDiCS-rWSGowbcOss4Hn-tTqm6Me-FM4GXI", "QKufsi6ZbCvMLqXyjuhAm0NdxzFrWAfQ8ESBKTEtbEMngz0k6hU",
+# "c5RlYlk_JeeAcY7nONW59Y1eRXhyTxxdDOvdkvKfGPl5ZonAB14", "kie1ZNdJz1FzqaCEkBjW7c5fL9-p91Wj9cq24BHWbdg7RuM4Emc", "8KFYOfkL2CcvuYJFqQNOPPzahE8NdrgNvSnaI7qnX35wkVMO92c"
+
+# "RKgx3tgV9gbXcqe2CjGLvTbSEbKAwjyhlzb4MiMAKKc78Cpo_PM"
+
 class DataExtractor:
 
     def __init__(self):
-        self.api_key_list = ["c5RlYlk_JeeAcY7nONW59Y1eRXhyTxxdDOvdkvKfGPl5ZonAB14", "kie1ZNdJz1FzqaCEkBjW7c5fL9-p91Wj9cq24BHWbdg7RuM4Emc", "8KFYOfkL2CcvuYJFqQNOPPzahE8NdrgNvSnaI7qnX35wkVMO92c",
-                             "mnYh70jlLSFNbN8oyhNyJhCxNIPTkeE0T8LiS4A7tj6M-XjCYH0", "87mdyvzjLRlXdIjHlMzgfXPZs2ZxB6XfUE27sNlhh4byBzWK_HM", "_3Q2-zdmQe1Yp92GWNN3nRYwbSyoD81DTMfC8wxgxLzCprWE28k",
-                             "iIQ96kjaO3LAmgkle-hG6sPIuS6qEz6OvS3KogDMq5CUP6Nbl1Y", "4OvqoW8WwOUUNmCOJDiCS-rWSGowbcOss4Hn-tTqm6Me-FM4GXI", "QKufsi6ZbCvMLqXyjuhAm0NdxzFrWAfQ8ESBKTEtbEMngz0k6hU", ]
+        self.api_key_list = ["c5RlYlk_JeeAcY7nONW59Y1eRXhyTxxdDOvdkvKfGPl5ZonAB14", "kie1ZNdJz1FzqaCEkBjW7c5fL9-p91Wj9cq24BHWbdg7RuM4Emc", "8KFYOfkL2CcvuYJFqQNOPPzahE8NdrgNvSnaI7qnX35wkVMO92c"]
         self.api_key_index = 0
         self.api_call_counter = 0
         self.api_key = self.api_key_list[self.api_key_index]
@@ -122,42 +126,24 @@ class DataExtractor:
 
             matches_info = requests.get(url, headers=self.header).json()
 
-            tournament_matches_streams_df = pd.DataFrame()
-            tournament_matches_games_df = pd.DataFrame()
-            tournament_matches_opponents_df = pd.DataFrame()
+            matches_raw_df = pd.concat([matches_raw_df, pd.json_normalize(matches_info)])
 
-            for match in matches_info:
-                if isinstance(match, dict):
-                    if "streams_list" in match and isinstance(match["streams_list"], list):
-                        tournament_matches_streams_df = pd.concat([tournament_matches_streams_df, pd.json_normalize(match["streams_list"])])
-                    else:
-                        tournament_matches_streams_df = pd.DataFrame()
+            for match_info in matches_info:
+                if "games" in match_info:
+                    matches_games_raw_df = pd.concat([matches_games_raw_df, pd.json_normalize(match_info["games"])])
 
-                    if "games" in match and isinstance(match["games"], list):
-                        tournament_matches_games_df = pd.concat([tournament_matches_games_df, pd.json_normalize(match["games"])])
-                    else:
-                        tournament_matches_games_df = pd.DataFrame()
+                if "streams_list" in match_info:
+                    streams_df = pd.json_normalize(match_info["streams_list"])
+                    streams_df["match_id"] = match_info["id"]
 
-                        if "opponents" in match and isinstance(match["opponents"], list):
-                            opponents_df = pd.DataFrame()
-                            if len(match["opponents"]) == 2:
-                                opponents_df = pd.json_normalize({"match_id": match["id"], "home_id": match["opponents"][0]["opponent"]["id"], "away_id": match["opponents"][1]["opponent"]["id"]})
-                            elif len(match["opponents"]) == 1:
-                                opponents_df = pd.json_normalize({"match_id": match["id"], "home_id": match["opponents"][0]["opponent"]["id"]})
-                        else:
-                            opponents_df = pd.DataFrame()
+                    matches_streams_raw_df = pd.concat([matches_streams_raw_df, streams_df])
 
-                        tournament_matches_opponents_df = pd.concat([tournament_matches_opponents_df, opponents_df])
-                        tournament_matches_opponents_df["match_id"] = match["id"]
-                        tournament_matches_streams_df["match_id"] = match["id"]
+                if "opponents" in match_info and isinstance(match_info["opponents"], list) and len(match_info["opponents"]) >= 2:
+                    opponents_dict = [{"home_id": match_info["opponents"][0]["opponent"]["id"], "away_id": match_info["opponents"][1]["opponent"]["id"], "match_id": match_info["id"]}]
 
-                        match_raw_df = pd.json_normalize(match)
+                    opponents_df = pd.DataFrame(opponents_dict)
 
-                        matches_raw_df = pd.concat([matches_raw_df, match_raw_df])
-
-                    matches_streams_raw_df = pd.concat([matches_streams_raw_df, tournament_matches_streams_df])
-                    matches_games_raw_df = pd.concat([matches_games_raw_df, tournament_matches_games_df])
-                    matches_opponents_raw_df = pd.concat([matches_opponents_raw_df, tournament_matches_opponents_df])
+                    matches_opponents_raw_df = pd.concat([matches_opponents_raw_df, opponents_df])
 
             self.api_call_counter += 1
 
