@@ -1,105 +1,153 @@
+import datetime
+import time
+
 import requests
 import pandas as pd
 
 
+# "mnYh70jlLSFNbN8oyhNyJhCxNIPTkeE0T8LiS4A7tj6M-XjCYH0", "87mdyvzjLRlXdIjHlMzgfXPZs2ZxB6XfUE27sNlhh4byBzWK_HM", "_3Q2-zdmQe1Yp92GWNN3nRYwbSyoD81DTMfC8wxgxLzCprWE28k",
+# "iIQ96kjaO3LAmgkle-hG6sPIuS6qEz6OvS3KogDMq5CUP6Nbl1Y", "4OvqoW8WwOUUNmCOJDiCS-rWSGowbcOss4Hn-tTqm6Me-FM4GXI", "QKufsi6ZbCvMLqXyjuhAm0NdxzFrWAfQ8ESBKTEtbEMngz0k6hU",
+# "c5RlYlk_JeeAcY7nONW59Y1eRXhyTxxdDOvdkvKfGPl5ZonAB14", "kie1ZNdJz1FzqaCEkBjW7c5fL9-p91Wj9cq24BHWbdg7RuM4Emc", "8KFYOfkL2CcvuYJFqQNOPPzahE8NdrgNvSnaI7qnX35wkVMO92c"
+
+# "RKgx3tgV9gbXcqe2CjGLvTbSEbKAwjyhlzb4MiMAKKc78Cpo_PM"
+
 class DataExtractor:
 
     def __init__(self):
-        self.api_key = None
+        self.api_key_list = ["c5RlYlk_JeeAcY7nONW59Y1eRXhyTxxdDOvdkvKfGPl5ZonAB14", "kie1ZNdJz1FzqaCEkBjW7c5fL9-p91Wj9cq24BHWbdg7RuM4Emc", "8KFYOfkL2CcvuYJFqQNOPPzahE8NdrgNvSnaI7qnX35wkVMO92c"]
+        self.api_key_index = 0
+        self.api_call_counter = 0
+        self.api_key = self.api_key_list[self.api_key_index]
         self.api_url = "https://api.pandascore.co"
-        self.header = None
+        self.header = {"accept": "application/json", "authorization": f"Bearer {self.api_key}"}
 
     def set_api_key(self, new_api_key):
         self.api_key = new_api_key
         self.header = {"accept": "application/json", "authorization": f"Bearer {new_api_key}"}
 
-    def fetch_raw_videogame(self, videogame):
-        url = f"{self.api_url}/videogames/{videogame}"
+    def check_api_key(self):
+        if self.api_call_counter % 1000 == 0:
+            if self.api_key_index == len(self.api_key_list) - 1:
+                datetime_now = datetime.datetime.now()
+                next_hour = (datetime_now.hour + 1)
 
-        game_info = requests.get(url, headers=self.header).json()
+                datetime_next_hour = datetime.datetime(year=datetime_now.year, month=datetime_now.month, day=datetime_now.day, hour=next_hour, minute=0, second=0)
 
-        first_dataframe = pd.json_normalize(game_info)
+                time.sleep((datetime_next_hour - datetime_now).total_seconds())
 
-        return first_dataframe
+                self.api_key_index = 0
 
-    def fetch_raw_league_from_videogames_id_list(self, videogames_id_list):
+                self.set_api_key(self.api_key_list[self.api_key_index])
+
+            else:
+                self.api_key_index += 1
+
+                self.set_api_key(self.api_key_list[self.api_key_index])
+
+    def fetch_raw_videogames(self, videogames_slug_list):
+        videogames_df = pd.DataFrame()
+
+        for videogame_slug in videogames_slug_list:
+            self.check_api_key()
+            url = f"{self.api_url}/videogames/{videogame_slug}"
+
+            response = requests.get(url, headers=self.header).json()
+
+            temp_dataframe = pd.json_normalize(response)
+
+            videogames_df = pd.concat([videogames_df, temp_dataframe])
+
+            self.api_call_counter += 1
+
+        return videogames_df
+
+    def fetch_raw_leagues(self, videogames_id_list):
         leagues_df = pd.DataFrame()
 
         for videogame_id in videogames_id_list:
-            for page_index in range(1, 5):
-                url = f"{self.api_url}/videogames/{videogame_id}/leagues?sort=&page=number={page_index}&size=100&per_page=100"
+            self.check_api_key()
+            url = f"{self.api_url}/videogames/{videogame_id}"
 
-                response = requests.get(url, headers=self.header)
-                data = response.json()
+            response = requests.get(url, headers=self.header).json()
 
-                temp_dataframe = pd.json_normalize(data)
+            temp_dataframe = pd.json_normalize(response["leagues"])
 
-                temp_dataframe["videogame_id"] = videogame_id
+            temp_dataframe["videogame_id"] = response["id"]
 
-                leagues_df = pd.concat([leagues_df, temp_dataframe])
+            leagues_df = pd.concat([leagues_df, temp_dataframe])
+
+            self.api_call_counter += 1
 
         return leagues_df
 
-    def fetch_raw_series_from_leagues_id_list(self, leagues_id_list):
-        series_raw_infos = []
+    def fetch_raw_series(self, leagues_id_list):
+        series_df = pd.DataFrame()
 
         for league_id in leagues_id_list:
-            for page_index in range(1, 4):
-                url = f"{self.api_url}/leagues/{league_id}/series?sort=&page={page_index}&per_page=100"
+            self.check_api_key()
+            url = f"{self.api_url}/leagues/{league_id}"
 
-                response = requests.get(url, headers=self.header)
-                data = response.json()
+            response = requests.get(url, headers=self.header).json()["series"]
 
-                series_raw_infos.extend(data)
+            temp_dataframe = pd.json_normalize(response)
 
-        series_raw_df = pd.json_normalize(series_raw_infos)
+            series_df = pd.concat([series_df, temp_dataframe])
 
-        return series_raw_df
+            self.api_call_counter += 1
 
-    def fetch_raw_tournaments_from_series_id_list(self, series_id_list):
-        tournaments_raw_infos = []
+        return series_df
+
+    def fetch_raw_tournaments(self, series_id_list):
+        tournaments_df = pd.DataFrame()
 
         for serie_id in series_id_list:
-            url = f"https://api.pandascore.co/series/{serie_id}/tournaments?sort=&page=1&per_page=50"
+            self.check_api_key()
+            url = f"https://api.pandascore.co/series/{serie_id}"
 
-            response = requests.get(url, headers=self.header).json()
-            tournaments_raw_infos.extend(response)
+            response = requests.get(url, headers=self.header).json()["tournaments"]
 
-        tournaments_raw_df = pd.json_normalize(tournaments_raw_infos)
+            temp_dataframe = pd.json_normalize(response)
 
-        return tournaments_raw_df
+            tournaments_df = pd.concat([tournaments_df, temp_dataframe])
 
-    def fetch_raw_all_matches_infos_from_tournaments_id_list(self, tournaments_id_list):
-        matches_raw_infos = []
+            self.api_call_counter += 1
+
+        return tournaments_df
+
+    def fetch_raw_all_matches_infos(self, tournaments_id_list):
+        matches_raw_df = pd.DataFrame()
         matches_streams_raw_df = pd.DataFrame()
         matches_games_raw_df = pd.DataFrame()
         matches_opponents_raw_df = pd.DataFrame()
 
         for tournament_id in tournaments_id_list:
+            self.check_api_key()
             url = f"{self.api_url}/tournaments/{tournament_id}/matches"
 
-            match_info = requests.get(url, headers=self.header).json()
+            matches_info = requests.get(url, headers=self.header).json()
 
-            tournament_matches_streams_df = pd.DataFrame()
-            tournament_matches_games_df = pd.DataFrame()
-            tournament_matches_opponents_df = pd.DataFrame()
-            for match in match_info:
-                pd.concat([tournament_matches_streams_df, pd.json_normalize(match["streams_list"])])
-                pd.concat([tournament_matches_games_df, pd.json_normalize(match["games"])])
-                pd.concat([tournament_matches_opponents_df, pd.json_normalize(match["opponents"])])
+            matches_raw_df = pd.concat([matches_raw_df, pd.json_normalize(matches_info)])
 
-                tournament_matches_opponents_df["match_id"] = match["id"]
-                tournament_matches_streams_df["match_id"] = match["id"]
+            for match_info in matches_info:
+                if "games" in match_info:
+                    matches_games_raw_df = pd.concat([matches_games_raw_df, pd.json_normalize(match_info["games"])])
 
-            matches_raw_infos.extend(match_info)
+                if "streams_list" in match_info:
+                    streams_df = pd.json_normalize(match_info["streams_list"])
+                    streams_df["match_id"] = match_info["id"]
 
-            pd.concat([matches_streams_raw_df, tournament_matches_streams_df])
-            pd.concat([matches_games_raw_df, tournament_matches_games_df])
-            pd.concat([matches_opponents_raw_df, tournament_matches_opponents_df])
+                    matches_streams_raw_df = pd.concat([matches_streams_raw_df, streams_df])
 
-        matches_raw_df = pd.json_normalize(matches_raw_infos)
+                if "opponents" in match_info and isinstance(match_info["opponents"], list) and len(match_info["opponents"]) >= 2:
+                    opponents_dict = [{"home_id": match_info["opponents"][0]["opponent"]["id"], "away_id": match_info["opponents"][1]["opponent"]["id"], "match_id": match_info["id"]}]
 
-        return {"matches_raw_df": matches_raw_df, "matches_streams_raw_df": matches_streams_raw_df, "matches_games_raw_df": matches_games_raw_df, "matches_opponents_raw_df": matches_opponents_raw_df}
+                    opponents_df = pd.DataFrame(opponents_dict)
+
+                    matches_opponents_raw_df = pd.concat([matches_opponents_raw_df, opponents_df])
+
+            self.api_call_counter += 1
+
+        return matches_raw_df, matches_streams_raw_df, matches_games_raw_df, matches_opponents_raw_df
 
     def fetch_raw_teams(self, tournaments_id_list):
         teams_raw_infos = []
