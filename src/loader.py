@@ -16,7 +16,7 @@ class DataframeLoader:
         print("Connecté à la base de données :))")
 
     def add_dataframe_to_database(self, dataframe, table_name):
-        dataframe.to_sql(table_name, con=self.engine, if_exists="replace", index=False)
+        dataframe.to_sql(table_name, con=self.engine, if_exists="replace")
 
         print(f"Table {table_name} ajoutée à la base de données")
 
