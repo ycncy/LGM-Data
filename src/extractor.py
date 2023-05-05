@@ -14,7 +14,7 @@ import pandas as pd
 class DataExtractor:
 
     def __init__(self):
-        self.api_key_list = ["c5RlYlk_JeeAcY7nONW59Y1eRXhyTxxdDOvdkvKfGPl5ZonAB14", "kie1ZNdJz1FzqaCEkBjW7c5fL9-p91Wj9cq24BHWbdg7RuM4Emc", "8KFYOfkL2CcvuYJFqQNOPPzahE8NdrgNvSnaI7qnX35wkVMO92c"]
+        self.api_key_list = ["mnYh70jlLSFNbN8oyhNyJhCxNIPTkeE0T8LiS4A7tj6M-XjCYH0", "87mdyvzjLRlXdIjHlMzgfXPZs2ZxB6XfUE27sNlhh4byBzWK_HM", "_3Q2-zdmQe1Yp92GWNN3nRYwbSyoD81DTMfC8wxgxLzCprWE28k", ]
         self.api_key_index = 0
         self.api_call_counter = 0
         self.api_key = self.api_key_list[self.api_key_index]
@@ -149,31 +149,28 @@ class DataExtractor:
 
         return matches_raw_df, matches_streams_raw_df, matches_games_raw_df, matches_opponents_raw_df
 
-    def fetch_raw_teams(self, tournaments_id_list):
-        teams_raw_infos = []
-
-        for tournament_id in tournaments_id_list:
-            url = f"{self.api_url}/tournaments/{tournament_id}/teams?sort=&page=1&per_page=50"
-
-            raw_teams = requests.get(url, headers=self.header).json()
-
-            teams_raw_infos.extend(raw_teams)
-
-        teams_raw_df = pd.json_normalize(teams_raw_infos)
-
-        return teams_raw_df
-
-    def fetch_raw_players_from_teams_id_list(self, teams_id_list):
+    def fetch_raw_teams_and_players_from_tournaments_id_list(self):
+        teams_raw_df = pd.DataFrame()
         players_raw_df = pd.DataFrame()
 
-        for team_id in teams_id_list:
-            url = f"{self.api_url}/players?filter[team_id]={team_id}&sort=&page=1&per_page=50"
+        for page_number in range(1, 100):
+            self.check_api_key()
 
-            response = requests.get(url, headers=self.header).json()
+            url = f"{self.api_url}/teams?sort=&page={page_number}&per_page=100"
 
-            temp_players_df = pd.json_normalize(response)
-            temp_players_df["team_id"] = team_id
+            teams_info = requests.get(url, headers=self.header).json()
 
-            players_raw_df = pd.concat([players_raw_df, temp_players_df])
+            if isinstance(teams_info, list):
 
-        return players_raw_df
+                for team_info in teams_info:
+                    teams_raw_df = pd.concat([teams_raw_df, pd.json_normalize(teams_info)])
+
+                    if "players" in team_info:
+                        players_df = pd.json_normalize(team_info["players"])
+                        players_df["team_id"] = team_info["id"]
+
+                        players_raw_df = pd.concat([players_raw_df, players_df])
+
+                self.api_call_counter += 1
+
+        return teams_raw_df, players_raw_df
