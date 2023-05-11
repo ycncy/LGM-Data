@@ -16,6 +16,11 @@ class DataframeLoader:
 
         print("Connecté à la base de données.")
 
+    def close_connection(self):
+        self.engine.dispose()
+
+        print("Déconnecté de la base de données")
+
     def add_dataframe_to_database(self, dataframe, table_name):
         col_types = {}
         for col in dataframe.columns:
@@ -25,8 +30,8 @@ class DataframeLoader:
                 col_types[col] = types.Float(precision=2)
             elif pd.api.types.is_integer_dtype(dataframe[col]):
                 col_types[col] = types.Integer()
-            elif pd.api.types.is_datetime64_dtype(dataframe[col]):
-                col_types[col] = types.Time()
+            elif pd.api.types.is_datetime64_dtype(dataframe[col]) or col == "begin_at" or col == "end_at" or col == "scheduled_at" or col == "original_scheduled_at":
+                col_types[col] = types.DateTime()
             elif pd.api.types.is_bool_dtype(dataframe[col]):
                 col_types[col] = types.Boolean()
             else:
@@ -38,6 +43,3 @@ class DataframeLoader:
             chunk[1].to_sql(table_name, con=self.engine, if_exists='append', dtype=col_types)
 
         print(f"Table {table_name} ajoutée à la base de données")
-
-    def close_connection(self):
-        self.engine.dispose()

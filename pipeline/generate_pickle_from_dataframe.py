@@ -1,7 +1,7 @@
 import pandas as pd
 
-from src.extractor import DataExtractor
-import transformer
+from pipeline.extract_data_from_api import DataExtractor
+import clean_dataframe as transformer
 
 videogames = ["valorant", "league-of-legends"]
 
