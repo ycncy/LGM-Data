@@ -2,7 +2,7 @@ import os
 
 import pandas as pd
 
-from pipeline.dataframe_to_sql import DataframeLoader
+from pipeline.load.dataframe_to_sql import DataframeLoader
 
 dataframe_loader = DataframeLoader("lgm.cihggjssark1.eu-west-3.rds.amazonaws.com", "admin", "azertyuiop", "main")
 
