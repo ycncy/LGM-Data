@@ -32,12 +32,12 @@ class DateRangeDataExtractor(DataExtractor):
 
         return leagues_df
 
-    def fetch_series_with_date_range(self, last_record_datetime, current_datetime, videogames_id_list):
+    def fetch_series_with_date_range(self, last_record_datetime, current_datetime, leagues_id_list):
         series_df = pd.DataFrame()
 
-        for videogame_id in videogames_id_list:
+        for league_id in leagues_id_list:
             self.check_api_key()
-            url = f"{self.api_url}/videogames/{videogame_id}/series?sort=-modified_at&page=1&per_page=100"
+            url = f"{self.api_url}/leagues/{league_id}/series?sort=-modified_at&page=1&per_page=100"
 
             response = requests.get(url, headers=self.header).json()
 
@@ -48,7 +48,7 @@ class DateRangeDataExtractor(DataExtractor):
             date_filtered_dataframe = first_dataframe.loc[(first_dataframe.begin_at > last_record_datetime) & (first_dataframe.begin_at <= current_datetime)]
 
             date_filtered_dataframe = date_filtered_dataframe.copy().reset_index(drop=False)
-            date_filtered_dataframe.insert(len(date_filtered_dataframe.columns), "videogame_id", videogame_id)
+            date_filtered_dataframe.insert(len(date_filtered_dataframe.columns), "videogame_id", response[0]["videogame"]["id"])
 
             series_df = pd.concat([series_df, date_filtered_dataframe])
 
@@ -56,12 +56,12 @@ class DateRangeDataExtractor(DataExtractor):
 
         return series_df
 
-    def fetch_tournaments_with_date_range(self, last_record_datetime, current_datetime, videogames_id_list):
+    def fetch_tournaments_with_date_range(self, last_record_datetime, current_datetime, series_id_list):
         tournaments_df = pd.DataFrame()
 
-        for videogame_id in videogames_id_list:
+        for serie_id in series_id_list:
             self.check_api_key()
-            url = f"{self.api_url}/videogames/{videogame_id}/tournaments?sort=-modified_at&page=1&per_page=100"
+            url = f"{self.api_url}/series/{serie_id}/tournaments?sort=-modified_at&page=1&per_page=100"
 
             response = requests.get(url, headers=self.header).json()
 
@@ -72,7 +72,7 @@ class DateRangeDataExtractor(DataExtractor):
             date_filtered_dataframe = first_dataframe.loc[(first_dataframe.begin_at > last_record_datetime) & (first_dataframe.begin_at <= current_datetime)]
 
             date_filtered_dataframe = date_filtered_dataframe.copy().reset_index(drop=False)
-            date_filtered_dataframe.insert(len(date_filtered_dataframe.columns), "videogame_id", videogame_id)
+            date_filtered_dataframe.insert(len(date_filtered_dataframe.columns), "videogame_id", response[0]["videogame"]["id"])
 
             tournaments_df = pd.concat([tournaments_df, date_filtered_dataframe])
 

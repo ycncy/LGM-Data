@@ -109,22 +109,26 @@ class MySQLDataManager:
         return last_record_datetime
 
     def insert_into_table(self, table_name, dataframe_to_inset):
-        cursor = self.connection.cursor()
+        try:
+            cursor = self.connection.cursor()
 
-        cursor.execute(f"SELECT * FROM `{table_name}` LIMIT 1")
+            cursor.execute(f"SELECT * FROM `{table_name}` LIMIT 1")
 
-        col_names = [i[0] for i in cursor.description]
+            col_names = [i[0] for i in cursor.description]
 
-        df_values = [tuple(x) for x in dataframe_to_inset.to_numpy()]
+            df_values = [tuple(x) for x in dataframe_to_inset.to_numpy()]
 
-        query = f"INSERT INTO `{table_name}` ({','.join(col_names)}) VALUES ({','.join(['%s'] * len(col_names))})"
+            query = f"INSERT IGNORE INTO `{table_name}` ({','.join(col_names)}) VALUES ({','.join(['%s'] * len(col_names))})"
 
-        cursor.fetchall()
+            cursor.fetchall()
 
-        cursor.executemany(query, df_values)
+            cursor.executemany(query, df_values)
 
-        self.connection.commit()
+            self.connection.commit()
 
-        cursor.close()
+            cursor.close()
 
-        print(f"{cursor.rowcount} enregistrements ajoutés à la table {table_name}")
+            print(f"{cursor.rowcount} enregistrements ajoutés à la table {table_name}")
+
+        except:
+            pass
