@@ -35,13 +35,20 @@ def run_program():
 
     matches_df, matches_streams_df, matches_games_df, matches_opponents_df = date_range_data_extractor.fetch_raw_all_matches_infos(tournaments_df.id.to_list())
 
-    mysql_data_manager.insert_into_table("league", leagues_df)
-    mysql_data_manager.insert_into_table("serie", series_df)
-    mysql_data_manager.insert_into_table("match", matches_df)
-    mysql_data_manager.insert_into_table("tournament", tournaments_df)
-    mysql_data_manager.insert_into_table("match_game", matches_games_df)
-    mysql_data_manager.insert_into_table("match_opponent", matches_opponents_df)
-    mysql_data_manager.insert_into_table("match_stream", matches_streams_df)
+    if not leagues_df.empty:
+        mysql_data_manager.insert_into_table("league", leagues_df)
+    if not series_df.empty:
+        mysql_data_manager.insert_into_table("serie", clean_series_dataframe(series_df))
+    if not tournaments_df.empty:
+        mysql_data_manager.insert_into_table("tournament", clean_tournaments_dataframe(tournaments_df))
+    if not matches_df.empty:
+        mysql_data_manager.insert_into_table("match", clean_matches_dataframe(matches_df))
+    if not matches_games_df.empty:
+        mysql_data_manager.insert_into_table("match_game", clean_games_dataframe(matches_games_df))
+    if not matches_opponents_df.empty:
+        mysql_data_manager.insert_into_table("match_opponent", clean_opponents_dataframe(matches_opponents_df))
+    if not matches_streams_df.empty:
+        mysql_data_manager.insert_into_table("match_stream", clean_streams_dataframe(matches_streams_df))
 
     mysql_data_manager.close_connection()
 

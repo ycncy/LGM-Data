@@ -72,6 +72,7 @@ def clean_tournaments_dataframe(tournaments_raw_df):
 
 def clean_matches_dataframe(matches_raw_df):
     # On récupère ici uniquement les colonnes que l'on veut garder dans la table finale
+
     keys_filter = matches_raw_df.filter(items=["id", "name", "slug", "match_type", "number_of_games", "tournament_id", "status", "draw", "winner_id", "original_scheduled_at", "scheduled_at", "begin_at", "end_at", "games_id_list"])
 
     keys_filter = keys_filter[pd.notnull(keys_filter.id)]
@@ -88,7 +89,6 @@ def clean_matches_dataframe(matches_raw_df):
 
     # Suppression des lignes dupliquées
     cleaned_dataframe = keys_filter.drop_duplicates()
-
     return cleaned_dataframe
 
 

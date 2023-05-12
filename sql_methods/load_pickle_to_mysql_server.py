@@ -8,7 +8,7 @@ dataframe_loader = MySQLDataManager("lgm.cihggjssark1.eu-west-3.rds.amazonaws.co
 
 dataframe_loader.connect_to_database()
 
-path_to_dataframes = "../test"
+path_to_dataframes = "../dataframes"
 
 for dataframe in os.listdir(path_to_dataframes):
 
