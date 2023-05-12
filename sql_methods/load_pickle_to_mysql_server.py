@@ -2,13 +2,13 @@ import os
 
 import pandas as pd
 
-from pipeline.load.dataframe_to_sql import DataframeLoader
+from pipeline.load.mysql_data_manager import MySQLDataManager
 
-dataframe_loader = DataframeLoader("lgm.cihggjssark1.eu-west-3.rds.amazonaws.com", "admin", "azertyuiop", "main")
+dataframe_loader = MySQLDataManager("lgm.cihggjssark1.eu-west-3.rds.amazonaws.com", "admin", "azertyuiop", "main")
 
 dataframe_loader.connect_to_database()
 
-path_to_dataframes = "../dataframes"
+path_to_dataframes = "../test"
 
 for dataframe in os.listdir(path_to_dataframes):
 

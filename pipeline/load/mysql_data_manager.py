@@ -2,7 +2,7 @@ import mysql.connector
 import pandas as pd
 
 
-class DataframeLoader:
+class MySQLDataManager:
 
     def __init__(self, database_host, database_user, database_password, database_name):
         self.database_host = database_host
@@ -36,31 +36,46 @@ class DataframeLoader:
         return tables
 
     def add_dataframe_to_database(self, dataframe, table_name):
-        col_types = {}
-        for col in dataframe.columns:
-            if pd.api.types.is_string_dtype(dataframe[col]):
-                col_types[col] = 'VARCHAR(255)'
-            elif pd.api.types.is_float_dtype(dataframe[col]):
-                col_types[col] = 'FLOAT(2)'
-            elif pd.api.types.is_integer_dtype(dataframe[col]):
-                col_types[col] = 'INT'
-            elif pd.api.types.is_datetime64_dtype(dataframe[col]) or col == "begin_at" or col == "end_at" or col == "scheduled_at" or col == "original_scheduled_at":
-                col_types[col] = 'DATETIME'
-            elif pd.api.types.is_bool_dtype(dataframe[col]):
-                col_types[col] = 'BOOLEAN'
+        cols = list(dataframe.columns)
+        types = []
+
+        for col in dataframe.dtypes:
+            print(col)
+            if col == 'object':
+                types.append('VARCHAR(255)')
+            elif col == 'datetime64[ns]' or col == 'datetime64[ns, UTC]':
+                types.append('DATETIME')
+            elif col == 'float64':
+                types.append('FLOAT(2)')
+            elif col == 'int64':
+                types.append('INT')
+            elif col == 'int32':
+                types.append('INTEGER')
+            elif col == 'bool':
+                types.append('BOOLEAN')
             else:
-                col_types[col] = 'VARCHAR(255)'
+                types.append('VARCHAR(255)')
+
+        col_types = ', '.join([f'{col} {type}' for col, type in zip(cols, types)])
+
+        create_table_query = f'CREATE TABLE `{table_name}` ({col_types})'
+
+        with self.connection.cursor() as cursor:
+            cursor.execute(create_table_query)
+
+        self.connection.commit()
 
         chunksize = 1000
-
         for i, chunk in enumerate(dataframe.groupby(dataframe.index // chunksize)):
-            query = f"INSERT INTO {table_name} ({', '.join(chunk[1].columns)}) VALUES ({', '.join(['%s'] * len(chunk[1].columns))})"
+            query = f"INSERT INTO `{table_name}` ({', '.join(chunk[1].columns)}) VALUES ({', '.join(['%s'] * len(chunk[1].columns))})"
             data = [tuple(x) for x in chunk[1].values]
+
             with self.connection.cursor() as cursor:
                 cursor.executemany(query, data)
 
         self.connection.commit()
-        print(f"Table {table_name} ajoutée à la base de données")
+
+        print(f"Table {table_name} créée et données insérées avec succès!")
 
     def get_last_record_datetime_from_table(self, table_name):
         select_all_columns = f"SELECT * FROM `{table_name}` LIMIT 1;"
@@ -87,6 +102,7 @@ class DataframeLoader:
 
         for row in cursor:
             last_record_datetime = row[0]
+            last_record_datetime = pd.to_datetime(last_record_datetime).tz_localize('UTC')
 
         cursor.close()
 
