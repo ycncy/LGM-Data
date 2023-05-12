@@ -3,7 +3,7 @@ import requests
 from data_extractor import DataExtractor
 
 
-class DataRangeDataExtractor(DataExtractor):
+class DateRangeDataExtractor(DataExtractor):
 
     def __init__(self):
         super().__init__()

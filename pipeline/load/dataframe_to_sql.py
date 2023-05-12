@@ -21,6 +21,20 @@ class DataframeLoader:
 
         print("Déconnecté de la base de données")
 
+    def get_all_tables(self):
+        cursor = self.connection.cursor()
+
+        cursor.execute("SHOW TABLES")
+
+        tables = []
+
+        for row in cursor:
+            tables.append(row[0])
+
+        cursor.close()
+
+        return tables
+
     def add_dataframe_to_database(self, dataframe, table_name):
         col_types = {}
         for col in dataframe.columns:
@@ -49,23 +63,31 @@ class DataframeLoader:
         print(f"Table {table_name} ajoutée à la base de données")
 
     def get_last_record_datetime_from_table(self, table_name):
-        select_all_columns = f"SELECT * FROM {table_name} LIMIT 1;"
+        select_all_columns = f"SELECT * FROM `{table_name}` LIMIT 1;"
 
         cursor = self.connection.cursor()
 
         cursor.execute(select_all_columns)
 
+        cursor.fetchall()
+
         column_names = [desc[0] for desc in cursor.description]
 
-        begin_at_select_request = f"SELECT begin_at FROM {table_name} ORDER BY begin_at DESC LIMIT 1"
-        modified_at_select_request = f"SELECT modified_at FROM {table_name} ORDER BY modified_at DESC LIMIT 1"
+        if "begin_at" not in column_names and "modified_at" not in column_names:
+            return ""
+
+        begin_at_select_request = f"SELECT begin_at FROM `{table_name}` ORDER BY begin_at DESC LIMIT 1"
+        modified_at_select_request = f"SELECT modified_at FROM `{table_name}` ORDER BY modified_at DESC LIMIT 1"
 
         select_request = begin_at_select_request if "begin_at" in column_names else modified_at_select_request
 
-        cursor.fetchall()
         cursor.execute(select_request)
 
+        last_record_datetime = ""
+
         for row in cursor:
-            print(row[0])
+            last_record_datetime = row[0]
 
         cursor.close()
+
+        return last_record_datetime
