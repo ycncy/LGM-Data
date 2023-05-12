@@ -47,7 +47,7 @@ class DateRangeDataExtractor(DataExtractor):
 
             date_filtered_dataframe = first_dataframe.loc[(first_dataframe.begin_at > last_record_datetime) & (first_dataframe.begin_at <= current_datetime)]
 
-            date_filtered_dataframe = date_filtered_dataframe.copy().reset_index(drop=True)
+            date_filtered_dataframe = date_filtered_dataframe.copy().reset_index(drop=False)
             date_filtered_dataframe.insert(len(date_filtered_dataframe.columns), "videogame_id", videogame_id)
 
             series_df = pd.concat([series_df, date_filtered_dataframe])
@@ -71,8 +71,8 @@ class DateRangeDataExtractor(DataExtractor):
 
             date_filtered_dataframe = first_dataframe.loc[(first_dataframe.begin_at > last_record_datetime) & (first_dataframe.begin_at <= current_datetime)]
 
-            date_filtered_dataframe = date_filtered_dataframe.copy()
-            date_filtered_dataframe.loc[:, "videogame_id"] = videogame_id
+            date_filtered_dataframe = date_filtered_dataframe.copy().reset_index(drop=False)
+            date_filtered_dataframe.insert(len(date_filtered_dataframe.columns), "videogame_id", videogame_id)
 
             tournaments_df = pd.concat([tournaments_df, date_filtered_dataframe])
 
