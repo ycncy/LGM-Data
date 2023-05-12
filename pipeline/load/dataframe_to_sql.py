@@ -1,23 +1,23 @@
+import mysql.connector
 import pandas as pd
-from sqlalchemy import create_engine, types
 
 
 class DataframeLoader:
 
-    def __init__(self, database_path, username, password, database):
-        self.database_path = database_path
-        self.username = username
-        self.password = password
-        self.database = database
-        self.engine = None
+    def __init__(self, database_host, database_user, database_password, database_name):
+        self.database_host = database_host
+        self.database_user = database_user
+        self.database_password = database_password
+        self.database_name = database_name
+        self.connection = None
 
     def connect_to_database(self):
-        self.engine = create_engine(f"mysql+mysqlconnector://{self.username}:{self.password}@{self.database_path}/{self.database}")
+        self.connection = mysql.connector.connect(host=self.database_host, user=self.database_user, password=self.database_password, database=self.database_name)
 
         print("Connecté à la base de données.")
 
     def close_connection(self):
-        self.engine.dispose()
+        self.connection.close()
 
         print("Déconnecté de la base de données")
 
@@ -25,21 +25,47 @@ class DataframeLoader:
         col_types = {}
         for col in dataframe.columns:
             if pd.api.types.is_string_dtype(dataframe[col]):
-                col_types[col] = types.String(length=255)
+                col_types[col] = 'VARCHAR(255)'
             elif pd.api.types.is_float_dtype(dataframe[col]):
-                col_types[col] = types.Float(precision=2)
+                col_types[col] = 'FLOAT(2)'
             elif pd.api.types.is_integer_dtype(dataframe[col]):
-                col_types[col] = types.Integer()
+                col_types[col] = 'INT'
             elif pd.api.types.is_datetime64_dtype(dataframe[col]) or col == "begin_at" or col == "end_at" or col == "scheduled_at" or col == "original_scheduled_at":
-                col_types[col] = types.DateTime()
+                col_types[col] = 'DATETIME'
             elif pd.api.types.is_bool_dtype(dataframe[col]):
-                col_types[col] = types.Boolean()
+                col_types[col] = 'BOOLEAN'
             else:
-                col_types[col] = types.String(length=255)
+                col_types[col] = 'VARCHAR(255)'
 
         chunksize = 1000
 
         for i, chunk in enumerate(dataframe.groupby(dataframe.index // chunksize)):
-            chunk[1].to_sql(table_name, con=self.engine, if_exists='append', dtype=col_types)
+            query = f"INSERT INTO {table_name} ({', '.join(chunk[1].columns)}) VALUES ({', '.join(['%s'] * len(chunk[1].columns))})"
+            data = [tuple(x) for x in chunk[1].values]
+            with self.connection.cursor() as cursor:
+                cursor.executemany(query, data)
 
+        self.connection.commit()
         print(f"Table {table_name} ajoutée à la base de données")
+
+    def get_last_record_datetime_from_table(self, table_name):
+        select_all_columns = f"SELECT * FROM {table_name} LIMIT 1;"
+
+        cursor = self.connection.cursor()
+
+        cursor.execute(select_all_columns)
+
+        column_names = [desc[0] for desc in cursor.description]
+
+        begin_at_select_request = f"SELECT begin_at FROM {table_name} ORDER BY begin_at DESC LIMIT 1"
+        modified_at_select_request = f"SELECT modified_at FROM {table_name} ORDER BY modified_at DESC LIMIT 1"
+
+        select_request = begin_at_select_request if "begin_at" in column_names else modified_at_select_request
+
+        cursor.fetchall()
+        cursor.execute(select_request)
+
+        for row in cursor:
+            print(row[0])
+
+        cursor.close()
