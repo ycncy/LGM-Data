@@ -31,8 +31,6 @@ class Referencer:
             table_primary_keys = table_keys["table_primary_keys"]
             table_foreign_keys = table_keys["table_foreign_keys"]
 
-            print(table_name)
-
             if len(table_primary_keys) > 0:
                 for primary_key in table_primary_keys:
                     add_primary_keys_request = text(f"ALTER TABLE" + f"`{table_name}`" + f"ADD CONSTRAINT {table_name}_primary_key_{primary_key} PRIMARY KEY ({primary_key})")
