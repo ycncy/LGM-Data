@@ -1,0 +1,17 @@
+name: Build and Run Docker Compose
+
+on:
+  schedule:
+    - cron: '*/5 * * * *' # exécute toutes les 5 minutes
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Build and Run Docker Compose
+      run: |
+        docker-compose build
+        docker-compose up -d
