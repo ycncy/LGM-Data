@@ -1,4 +1,6 @@
 import mysql.connector
+import mysql.connector.conversion
+from sqlalchemy import create_engine
 import pandas as pd
 
 
@@ -40,7 +42,6 @@ class MySQLDataManager:
         types = []
 
         for col in dataframe.dtypes:
-            print(col)
             if col == 'object':
                 types.append('VARCHAR(255)')
             elif col == 'datetime64[ns]' or col == 'datetime64[ns, UTC]':
@@ -48,9 +49,7 @@ class MySQLDataManager:
             elif col == 'float64':
                 types.append('FLOAT(2)')
             elif col == 'int64':
-                types.append('INT')
-            elif col == 'int32':
-                types.append('INTEGER')
+                types.append('INT(19)')
             elif col == 'bool':
                 types.append('BOOLEAN')
             else:
@@ -65,19 +64,29 @@ class MySQLDataManager:
 
         self.connection.commit()
 
-        chunksize = 1000
-        for i, chunk in enumerate(dataframe.groupby(dataframe.index // chunksize)):
-            query = f"INSERT INTO `{table_name}` ({', '.join(chunk[1].columns)}) VALUES ({', '.join(['%s'] * len(chunk[1].columns))})"
-            data = [tuple(x) for x in chunk[1].values]
+        try:
+            query = f"INSERT INTO `{table_name}` ({', '.join(dataframe.columns)}) VALUES ({', '.join(['%s'] * len(dataframe.columns))})"
+
+            data = [tuple(x) for x in dataframe.values]
 
             with self.connection.cursor() as cursor:
-                cursor.executemany(query, data)
+                print(cursor.executemany(query, data))
 
-        self.connection.commit()
+            self.connection.commit()
 
-        print(f"Table {table_name} créée et données insérées avec succès!")
+            print(f"Table {table_name} créée et données insérées avec succès!")
+
+        except:
+            engine = create_engine(f"mysql+mysqlconnector://{self.database_user}:{self.database_password}@{self.database_host}/{self.database_name}")
+
+            # envoyer le dataframe dans la table 'nom_table' dans la base de données
+            dataframe.to_sql(name=table_name, con=engine, if_exists='append', index=False)
+
+            # fermer la connexion à la base de données
+            self.close_connection()
 
     def get_last_record_datetime_from_table(self, table_name):
+
         select_all_columns = f"SELECT * FROM `{table_name}` LIMIT 1;"
 
         cursor = self.connection.cursor()
@@ -102,13 +111,13 @@ class MySQLDataManager:
 
         for row in cursor:
             last_record_datetime = row[0]
-            last_record_datetime = pd.to_datetime(last_record_datetime).tz_localize('UTC')
+        last_record_datetime = pd.to_datetime(last_record_datetime).tz_localize('UTC')
 
         cursor.close()
 
         return last_record_datetime
 
-    def insert_into_table(self, table_name, dataframe_to_inset):
+    def insert_into_table(self, table_name, dataframe_to_insert):
         try:
             cursor = self.connection.cursor()
 
@@ -116,7 +125,7 @@ class MySQLDataManager:
 
             col_names = [i[0] for i in cursor.description]
 
-            df_values = [tuple(x) for x in dataframe_to_inset.to_numpy()]
+            df_values = [tuple(x) for x in dataframe_to_insert.to_numpy()]
 
             query = f"INSERT IGNORE INTO `{table_name}` ({','.join(col_names)}) VALUES ({','.join(['%s'] * len(col_names))})"
 
@@ -131,4 +140,10 @@ class MySQLDataManager:
             print(f"{cursor.rowcount} enregistrements ajoutés à la table {table_name}")
 
         except:
-            pass
+            engine = create_engine(f"mysql+mysqlconnector://{self.database_user}:{self.database_password}@{self.database_host}/{self.database_name}")
+
+            # envoyer le dataframe dans la table 'nom_table' dans la base de données
+            dataframe_to_insert.to_sql(name=table_name, con=engine, if_exists='append', index=False)
+
+            # fermer la connexion à la base de données
+            self.close_connection()

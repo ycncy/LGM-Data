@@ -4,7 +4,7 @@ import pandas as pd
 
 from pipeline.load.mysql_data_manager import MySQLDataManager
 
-dataframe_loader = MySQLDataManager("lgm.cihggjssark1.eu-west-3.rds.amazonaws.com", "admin", "azertyuiop", "main")
+dataframe_loader = MySQLDataManager("lgm.cihggjssark1.eu-west-3.rds.amazonaws.com", "admin", "azertyuiop", "test")
 
 dataframe_loader.connect_to_database()
 
