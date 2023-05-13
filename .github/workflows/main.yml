@@ -9,6 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Build Docker Compose
-      run: docker-compose -f docker-compose.yml build
+      run: docker-compose -f ../../docker-compose.yml build
     - name: Start Docker Compose
       run: docker-compose up -d
