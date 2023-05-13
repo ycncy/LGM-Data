@@ -2,7 +2,7 @@ name: Docker Compose
 
 on:
   schedule:
-    - cron: '0 * * * *' # Planifiez le déclenchement de cette action toutes les heures
+    - cron: '*/5 * * * *' # Planifiez le déclenchement de cette action toutes les heures
 
 jobs:
   build:
