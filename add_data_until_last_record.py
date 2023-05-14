@@ -12,13 +12,15 @@ database_name = os.environ.get('DATABASE_NAME')
 database_user = os.environ.get('DATABASE_USER')
 database_password = os.environ.get('DATABASE_PASSWORD')
 
-mysql_data_manager = MySQLDataManager(database_host, database_user, database_password, database_name)
+mysql_data_manager = MySQLDataManager("lgm.cihggjssark1.eu-west-3.rds.amazonaws.com", "admin", "azertyuiop", "main")
 mysql_data_manager.connect_to_database()
 
 videogames_id_list = [26, 1]
 
 current_datetime = datetime.datetime.now()
 current_datetime = pd.to_datetime(current_datetime).tz_localize('UTC')
+
+print(mysql_data_manager.get_table_id_list("league"))
 
 league_last_record_datetime = mysql_data_manager.get_last_record_datetime_from_table("serie")
 leagues_df = date_range_data_extractor.fetch_leagues_with_date_range(league_last_record_datetime, current_datetime, videogames_id_list)

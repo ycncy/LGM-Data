@@ -117,6 +117,24 @@ class MySQLDataManager:
 
         return last_record_datetime
 
+    def get_table_id_list(self, table_name):
+        cursor = self.connection.cursor()
+
+        query = f"SELECT id FROM {table_name}"
+
+        cursor.execute(query)
+
+        id_list = []
+
+        for row in cursor:
+            id_list.append(row[0])
+
+        cursor.close()
+
+        return id_list
+
+
+
     def insert_into_table(self, table_name, dataframe_to_insert):
         try:
             cursor = self.connection.cursor()
