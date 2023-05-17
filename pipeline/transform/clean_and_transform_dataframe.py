@@ -17,7 +17,7 @@ def clean_videogames_dataframe(videogame_raw_df):
 
 def clean_leagues_dataframe(leagues_raw_df):
     # On récupère ici uniquement les colonnes que l'on veut garder dans la table finale
-    keys_filter = leagues_raw_df.filter(items=["id", "image_url", "name", "videogame_id"])
+    keys_filter = leagues_raw_df.filter(items=["id", "image_url", "name", "videogame_id", "modified_at"])
 
     keys_filter = keys_filter.dropna(subset=["id"])
 
@@ -25,6 +25,8 @@ def clean_leagues_dataframe(leagues_raw_df):
     keys_filter["id"] = keys_filter["id"].astype('int64')
 
     keys_filter[["name", "image_url"]] = keys_filter[["name", "image_url"]].astype(str)
+
+    keys_filter["modified_at"] = pd.to_datetime(keys_filter["modified_at"])
 
     # Suppression des lignes dupliquées
     cleaned_dataframe = keys_filter.drop_duplicates()
