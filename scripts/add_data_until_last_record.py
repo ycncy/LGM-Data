@@ -24,27 +24,42 @@ mysql_data_manager.connect_to_database()
 
 
 async def main():
-    last_record_datetime = pd.to_datetime("2023-05-21 08:30:00")
+    last_record_datetime = pd.to_datetime("2023-04-15 00:00:00")
     current_datetime = pd.to_datetime(datetime.datetime.now())
 
     leagues_df = await date_range_data_extractor.fetch_leagues_with_date_range(last_record_datetime, current_datetime, videogames_id_list)
+
+    print(leagues_df)
 
     leagues_id_list = list(set(leagues_df.id.to_list() + mysql_data_manager.get_table_id_list("league")))
 
     series_df = await date_range_data_extractor.fetch_series_with_date_range(leagues_id_list, last_record_datetime, current_datetime)
 
+    print(series_df)
+
     series_id_list = list(set(series_df.id.to_list() + mysql_data_manager.get_table_id_list("serie")))
 
     tournaments_df = await date_range_data_extractor.fetch_tournaments_with_date_range(series_id_list, last_record_datetime, current_datetime)
+
+    print(tournaments_df)
 
     tournaments_id_list = tournaments_df.id.to_list() + mysql_data_manager.get_table_id_list("tournament")
 
     matches_raw_df, matches_streams_raw_df, matches_games_raw_df, matches_opponents_raw_df = await date_range_data_extractor.fetch_raw_all_matches_infos_with_date_range(tournaments_id_list, last_record_datetime)
 
+    print(matches_raw_df)
+    print(matches_games_raw_df)
+    print(matches_streams_raw_df)
+    print(matches_opponents_raw_df)
+
     teams_raw_df, players_raw_df = await date_range_data_extractor.fetch_raw_teams_and_players_from_tournaments_id_list(tournaments_id_list)
 
-    dataframes = {'league': leagues_df, 'serie': series_df, 'tournament': tournaments_df, 'matchs': matches_raw_df, 'match_game': matches_games_raw_df, 'match_opponent': matches_opponents_raw_df, 'match_stream': matches_streams_raw_df,
-                  'team': teams_raw_df, 'player': players_raw_df}
+    print(teams_raw_df)
+    print(players_raw_df)
+
+    dataframes = {'league': clean_leagues_dataframe(leagues_df), 'serie': clean_series_dataframe(series_df), 'tournament': clean_tournaments_dataframe(tournaments_df), 'matchs': clean_matches_dataframe(matches_raw_df),
+                  'match_game': clean_games_dataframe(matches_games_raw_df), 'match_opponent': clean_opponents_dataframe(matches_opponents_raw_df), 'match_stream': clean_streams_dataframe(matches_streams_raw_df),
+                  'team': clean_teams_dataframe(teams_raw_df), 'player': clean_players_dataframe(players_raw_df)}
 
     for file_name, dataframe in dataframes.items():
         mysql_data_manager.insert_or_update_data(dataframe, file_name)
