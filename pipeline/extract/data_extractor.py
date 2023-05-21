@@ -8,12 +8,11 @@ import requests
 class DataExtractor:
 
     def __init__(self):
-        # self.api_key_list = ["kie1ZNdJz1FzqaCEkBjW7c5fL9-p91Wj9cq24BHWbdg7RuM4Emc", "RKgx3tgV9gbXcqe2CjGLvTbSEbKAwjyhlzb4MiMAKKc78Cpo_PM", "4OvqoW8WwOUUNmCOJDiCS-rWSGowbcOss4Hn-tTqm6Me-FM4GXI",
-        #                      "87mdyvzjLRlXdIjHlMzgfXPZs2ZxB6XfUE27sNlhh4byBzWK_HM", "8KFYOfkL2CcvuYJFqQNOPPzahE8NdrgNvSnaI7qnX35wkVMO92c", "QKufsi6ZbCvMLqXyjuhAm0NdxzFrWAfQ8ESBKTEtbEMngz0k6hU",
-        #                      "mnYh70jlLSFNbN8oyhNyJhCxNIPTkeE0T8LiS4A7tj6M-XjCYH0", "_3Q2-zdmQe1Yp92GWNN3nRYwbSyoD81DTMfC8wxgxLzCprWE28k", "c",
-        #                      "c5RlYlk_JeeAcY7nONW59Y1eRXhyTxxdDOvdkvKfGPl5ZonAB14", "OS_egAWqsE7_WSvJfHHMa-uZIA7mDZitPZaRUuoPOrfI65UirWQ"]
-
-        self.api_key_list = ["IbuMRytPybtW_2wQ0iLbZZcr4zYx0hfQsAt07MLU5WY3b_M8fsc", "Jj_EamWkuCYJiBROZ6YjL69JE8g33IhOBcvLYCV8WFFGOi_CILc", "LYKeSzkZG5h96CANKNl_ssFDCcb84Cv3tjMCWj4tCRI_1FpzXrQ"]
+        self.api_key_list = ["_3Q2-zdmQe1Yp92GWNN3nRYwbSyoD81DTMfC8wxgxLzCprWE28k", "IbuMRytPybtW_2wQ0iLbZZcr4zYx0hfQsAt07MLU5WY3b_M8fsc", "kie1ZNdJz1FzqaCEkBjW7c5fL9-p91Wj9cq24BHWbdg7RuM4Emc",
+                             "RKgx3tgV9gbXcqe2CjGLvTbSEbKAwjyhlzb4MiMAKKc78Cpo_PM", "4OvqoW8WwOUUNmCOJDiCS-rWSGowbcOss4Hn-tTqm6Me-FM4GXI", "QKufsi6ZbCvMLqXyjuhAm0NdxzFrWAfQ8ESBKTEtbEMngz0k6hU",
+                             "Jj_EamWkuCYJiBROZ6YjL69JE8g33IhOBcvLYCV8WFFGOi_CILc", "LYKeSzkZG5h96CANKNl_ssFDCcb84Cv3tjMCWj4tCRI_1FpzXrQ", "c5RlYlk_JeeAcY7nONW59Y1eRXhyTxxdDOvdkvKfGPl5ZonAB14",
+                             "87mdyvzjLRlXdIjHlMzgfXPZs2ZxB6XfUE27sNlhh4byBzWK_HM", "8KFYOfkL2CcvuYJFqQNOPPzahE8NdrgNvSnaI7qnX35wkVMO92c", "mnYh70jlLSFNbN8oyhNyJhCxNIPTkeE0T8LiS4A7tj6M-XjCYH0",
+                             "OS_egAWqsE7_WSvJfHHMa-uZIA7mDZitPZaRUuoPOrfI65UirWQ"]
         self.api_key_index = 0
         self.api_call_counter = 0
         self.api_key = self.api_key_list[self.api_key_index]
