@@ -1,16 +1,19 @@
 import datetime
 import time
-import requests
+
 import pandas as pd
+import requests
 
 
 class DataExtractor:
 
     def __init__(self):
-        self.api_key_list = ["RKgx3tgV9gbXcqe2CjGLvTbSEbKAwjyhlzb4MiMAKKc78Cpo_PM", "mnYh70jlLSFNbN8oyhNyJhCxNIPTkeE0T8LiS4A7tj6M-XjCYH0", "87mdyvzjLRlXdIjHlMzgfXPZs2ZxB6XfUE27sNlhh4byBzWK_HM",
-                             "_3Q2-zdmQe1Yp92GWNN3nRYwbSyoD81DTMfC8wxgxLzCprWE28k", "iIQ96kjaO3LAmgkle-hG6sPIuS6qEz6OvS3KogDMq5CUP6Nbl1Y", "4OvqoW8WwOUUNmCOJDiCS-rWSGowbcOss4Hn-tTqm6Me-FM4GXI",
-                             "QKufsi6ZbCvMLqXyjuhAm0NdxzFrWAfQ8ESBKTEtbEMngz0k6hU", "c5RlYlk_JeeAcY7nONW59Y1eRXhyTxxdDOvdkvKfGPl5ZonAB14", "kie1ZNdJz1FzqaCEkBjW7c5fL9-p91Wj9cq24BHWbdg7RuM4Emc",
-                             "8KFYOfkL2CcvuYJFqQNOPPzahE8NdrgNvSnaI7qnX35wkVMO92c"]
+        # self.api_key_list = ["kie1ZNdJz1FzqaCEkBjW7c5fL9-p91Wj9cq24BHWbdg7RuM4Emc", "RKgx3tgV9gbXcqe2CjGLvTbSEbKAwjyhlzb4MiMAKKc78Cpo_PM", "4OvqoW8WwOUUNmCOJDiCS-rWSGowbcOss4Hn-tTqm6Me-FM4GXI",
+        #                      "87mdyvzjLRlXdIjHlMzgfXPZs2ZxB6XfUE27sNlhh4byBzWK_HM", "8KFYOfkL2CcvuYJFqQNOPPzahE8NdrgNvSnaI7qnX35wkVMO92c", "QKufsi6ZbCvMLqXyjuhAm0NdxzFrWAfQ8ESBKTEtbEMngz0k6hU",
+        #                      "mnYh70jlLSFNbN8oyhNyJhCxNIPTkeE0T8LiS4A7tj6M-XjCYH0", "_3Q2-zdmQe1Yp92GWNN3nRYwbSyoD81DTMfC8wxgxLzCprWE28k", "c",
+        #                      "c5RlYlk_JeeAcY7nONW59Y1eRXhyTxxdDOvdkvKfGPl5ZonAB14", "OS_egAWqsE7_WSvJfHHMa-uZIA7mDZitPZaRUuoPOrfI65UirWQ"]
+
+        self.api_key_list = ["IbuMRytPybtW_2wQ0iLbZZcr4zYx0hfQsAt07MLU5WY3b_M8fsc", "Jj_EamWkuCYJiBROZ6YjL69JE8g33IhOBcvLYCV8WFFGOi_CILc", "LYKeSzkZG5h96CANKNl_ssFDCcb84Cv3tjMCWj4tCRI_1FpzXrQ"]
         self.api_key_index = 0
         self.api_call_counter = 0
         self.api_key = self.api_key_list[self.api_key_index]
@@ -22,7 +25,7 @@ class DataExtractor:
         self.header = {"accept": "application/json", "authorization": f"Bearer {new_api_key}"}
 
     def check_api_key(self):
-        if self.api_call_counter % 1000 == 0:
+        if self.api_call_counter % 1000 == 0 and self.api_call_counter != 0:
             if self.api_key_index == len(self.api_key_list) - 1:
                 datetime_now = datetime.datetime.now()
                 next_hour = (datetime_now.hour + 1)
