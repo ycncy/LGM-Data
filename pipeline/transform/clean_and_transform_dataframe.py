@@ -17,7 +17,7 @@ def clean_videogames_dataframe(videogame_raw_df):
 
 def clean_leagues_dataframe(leagues_raw_df):
     # On récupère ici uniquement les colonnes que l'on veut garder dans la table finale
-    keys_filter = leagues_raw_df.filter(items=["id", "image_url", "name", "videogame_id", "modified_at"])
+    keys_filter = leagues_raw_df.filter(items=["id", "image_url", "name", "videogame_id"])
 
     keys_filter = keys_filter.dropna(subset=["id"])
 
