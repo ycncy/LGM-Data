@@ -1,10 +1,14 @@
 import asyncio
 import datetime
 import os
+import sys
 
 from pipeline.extract.asynchronus_extraction_with_date_range import AsynchronousDateRangeDataExtractor
 from pipeline.load.mysql_data_manager import MySQLDataManager
 from pipeline.transform.clean_and_transform_dataframe import *
+
+print('Python %s on %s' % (sys.version, sys.platform))
+sys.path.extend(['..\\..\\Data'])
 
 date_range_data_extractor = AsynchronousDateRangeDataExtractor()
 
@@ -20,7 +24,7 @@ mysql_data_manager.connect_to_database()
 
 
 async def main():
-    last_record_datetime = pd.to_datetime("2023-04-27 00:00:00")
+    last_record_datetime = pd.to_datetime("2023-05-21 08:30:00")
     current_datetime = pd.to_datetime(datetime.datetime.now())
 
     leagues_df = await date_range_data_extractor.fetch_leagues_with_date_range(last_record_datetime, current_datetime, videogames_id_list)
@@ -44,5 +48,6 @@ async def main():
 
     for file_name, dataframe in dataframes.items():
         mysql_data_manager.insert_or_update_data(dataframe, file_name)
+
 
 asyncio.run(main())
