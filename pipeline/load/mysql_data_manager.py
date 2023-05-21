@@ -1,7 +1,8 @@
 import mysql.connector
 import mysql.connector.conversion
-from sqlalchemy import create_engine
+import numpy as np
 import pandas as pd
+from sqlalchemy import create_engine
 
 
 class MySQLDataManager:
@@ -79,11 +80,52 @@ class MySQLDataManager:
         except:
             engine = create_engine(f"mysql+mysqlconnector://{self.database_user}:{self.database_password}@{self.database_host}/{self.database_name}")
 
-            # envoyer le dataframe dans la table 'nom_table' dans la base de données
             dataframe.to_sql(name=table_name, con=engine, if_exists='append', index=False)
 
-            # fermer la connexion à la base de données
             self.close_connection()
+
+    def insert_or_update_data(self, dataframe, table_name):
+        unique_col = "id" if "id" in dataframe else "match_id"
+        self.insert_or_update_new_data_with_specific_column(dataframe, table_name, unique_col)
+
+    def insert_or_update_new_data_with_specific_column(self, dataframe, table_name, column_to_check):
+        if dataframe.empty:
+            return
+
+        for index, row in dataframe.iterrows():
+            self.handle_row_update_or_insert(table_name, column_to_check, row)
+
+        self.connection.commit()
+
+    def handle_row_update_or_insert(self, table_name, column_to_check, row):
+        with self.connection.cursor() as cursor:
+            cursor.execute(f"SELECT * FROM {table_name} WHERE id = {row[column_to_check]}")
+            result = cursor.fetchone()
+
+        if result:
+            self.update_row(table_name, column_to_check, row)
+        else:
+            self.insert_row(table_name, row)
+
+    def update_row(self, table_name, column_to_check, row):
+        try:
+            updates = [f"{column} = '{value}'" for column, value in row.items()]
+            query_update = f"UPDATE `{table_name}` SET {', '.join(updates)} WHERE id = {row[column_to_check]}"
+            with self.connection.cursor() as cursor:
+                cursor.execute(query_update)
+                print("La mise à jour a réussi" if cursor.rowcount > 0 else "Aucune ligne n'a été mise à jour")
+        except:
+            print("Erreur lors de la mise à jour")
+
+    def insert_row(self, table_name, row):
+        try:
+            vals = [f"'{value.tolist()}'" if isinstance(value, np.ndarray) else f"'{value}'" for value in row.values]
+            query_insert = f"INSERT INTO `{table_name}` ({', '.join(row.keys())}) VALUES ({', '.join(vals)})"
+            with self.connection.cursor() as cursor:
+                cursor.execute(query_insert)
+                print("L'insertion a réussi." if cursor.rowcount > 0 else "L'insertion a échoué.")
+        except:
+            print("Erreur lors de l'insertion")
 
     def get_last_record_datetime_from_table(self, table_name):
 
@@ -132,8 +174,6 @@ class MySQLDataManager:
         cursor.close()
 
         return id_list
-
-
 
     def insert_into_table(self, table_name, dataframe_to_insert):
         try:
