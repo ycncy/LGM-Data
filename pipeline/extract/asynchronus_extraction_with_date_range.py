@@ -1,6 +1,7 @@
 import asyncio
-import pandas as pd
+
 import aiohttp
+import pandas as pd
 
 from pipeline.extract.data_extractor import DataExtractor
 
@@ -108,7 +109,6 @@ class AsynchronousDateRangeDataExtractor(DataExtractor):
 
         return date_filtered_dataframe
 
-
     async def fetch_tournaments_with_date_range(self, series_id_list, last_update_datetime, current_datetime):
         tournaments_df = pd.DataFrame()
 
@@ -145,25 +145,21 @@ class AsynchronousDateRangeDataExtractor(DataExtractor):
                 matches_raw_df = pd.concat([matches_raw_df, date_filtered_dataframe])
 
                 for match_info in matches_info:
-                    print(match_info)
                     if "games" in match_info:
-                        if match_info["id"] in date_filtered_dataframe.id.to_list():
-                            matches_games_raw_df = pd.concat([matches_games_raw_df, pd.json_normalize(match_info["games"])])
+                        matches_games_raw_df = pd.concat([matches_games_raw_df, pd.json_normalize(match_info["games"])])
 
                     if "streams_list" in match_info:
-                        if match_info["id"] in date_filtered_dataframe.id.to_list():
-                            streams_df = pd.json_normalize(match_info["streams_list"])
-                            streams_df["match_id"] = match_info["id"]
+                        streams_df = pd.json_normalize(match_info["streams_list"])
+                        streams_df["match_id"] = match_info["id"]
 
-                            matches_streams_raw_df = pd.concat([matches_streams_raw_df, streams_df])
+                        matches_streams_raw_df = pd.concat([matches_streams_raw_df, streams_df])
 
                     if "opponents" in match_info and isinstance(match_info["opponents"], list) and len(match_info["opponents"]) >= 2:
-                        if match_info["id"] in date_filtered_dataframe.id.to_list():
-                            opponents_dict = [{"home_id": match_info["opponents"][0]["opponent"]["id"], "away_id": match_info["opponents"][1]["opponent"]["id"], "match_id": match_info["id"]}]
+                        opponents_dict = [{"home_id": match_info["opponents"][0]["opponent"]["id"], "away_id": match_info["opponents"][1]["opponent"]["id"], "match_id": match_info["id"]}]
 
-                            opponents_df = pd.DataFrame(opponents_dict)
+                        opponents_df = pd.DataFrame(opponents_dict)
 
-                            matches_opponents_raw_df = pd.concat([matches_opponents_raw_df, opponents_df])
+                        matches_opponents_raw_df = pd.concat([matches_opponents_raw_df, opponents_df])
 
             self.api_call_counter += 1
 
