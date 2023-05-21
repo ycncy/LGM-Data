@@ -14,7 +14,7 @@ mysql_data_manager = MySQLDataManager(database_host, database_user, database_pas
 
 mysql_data_manager.connect_to_database()
 
-path_to_dataframes = "../dataframes"
+path_to_dataframes = "../backup/dataframes"
 
 for dataframe in os.listdir(path_to_dataframes):
 
