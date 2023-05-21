@@ -84,48 +84,67 @@ class MySQLDataManager:
 
             self.close_connection()
 
-    def insert_or_update_data(self, dataframe, table_name):
-        unique_col = "id" if "id" in dataframe else "match_id"
-        self.insert_or_update_new_data_with_specific_column(dataframe, table_name, unique_col)
-
     def insert_or_update_new_data_with_specific_column(self, dataframe, table_name, column_to_check):
-        if dataframe.empty:
-            return
+        cursor = self.connection.cursor()
 
-        for index, row in dataframe.iterrows():
-            self.handle_row_update_or_insert(table_name, column_to_check, row)
+        if not dataframe.empty:
+            for index, row in dataframe.iterrows():
+                query_select = f"SELECT * FROM `{table_name}` WHERE id = {row[column_to_check]}"
+
+                cursor.execute(query_select)
+
+                result = cursor.fetchone()
+
+                if result:
+                    try:
+                        query_update = f"UPDATE `{table_name}` SET "
+
+                        updates = []
+                        for column, value in row.items():
+                            update = f"{column} = '{value}'"
+                            updates.append(update)
+
+                        query_update += ", ".join(updates)
+                        query_update += f" WHERE id = {row[column_to_check]}"
+
+                        cursor.execute(query_update)
+
+                        if cursor.rowcount > 0:
+                            print("La mise à jour a réussi")
+                        else:
+                            print("Aucune ligne n'a été mise à jour")
+                    except mysql.connector.Error as e:
+                        print(f"Erreur {e}")
+
+                else:
+                    try:
+                        query_insert = f"INSERT INTO `{table_name}` ("
+                        query_insert += ", ".join(row.keys())
+                        query_insert += ") VALUES ("
+                        query_insert += ", ".join([f"'{value.tolist()}'" if isinstance(value, np.ndarray) else f"'{value}'" for value in row.values])
+                        query_insert += ")"
+
+                        cursor.execute(query_insert)
+
+                        if cursor.rowcount > 0:
+                            print("L'insertion a réussi.")
+                        else:
+                            print("L'insertion a échoué.")
+
+                    except:
+                        print("Erreur")
 
         self.connection.commit()
 
-    def handle_row_update_or_insert(self, table_name, column_to_check, row):
-        with self.connection.cursor() as cursor:
-            cursor.execute(f"SELECT * FROM {table_name} WHERE id = {row[column_to_check]}")
-            result = cursor.fetchone()
+        cursor.close()
 
-        if result:
-            self.update_row(table_name, column_to_check, row)
+    def insert_or_update_data(self, dataframe, table_name):
+        if "id" in dataframe:
+            self.insert_or_update_new_data_with_specific_column(dataframe, table_name, "id")
+        elif "match_id" in dataframe:
+            self.insert_or_update_new_data_with_specific_column(dataframe, table_name, "match_id")
         else:
-            self.insert_row(table_name, row)
-
-    def update_row(self, table_name, column_to_check, row):
-        try:
-            updates = [f"{column} = '{value}'" for column, value in row.items()]
-            query_update = f"UPDATE `{table_name}` SET {', '.join(updates)} WHERE id = {row[column_to_check]}"
-            with self.connection.cursor() as cursor:
-                cursor.execute(query_update)
-                print("La mise à jour a réussi" if cursor.rowcount > 0 else "Aucune ligne n'a été mise à jour")
-        except:
-            print("Erreur lors de la mise à jour")
-
-    def insert_row(self, table_name, row):
-        try:
-            vals = [f"'{value.tolist()}'" if isinstance(value, np.ndarray) else f"'{value}'" for value in row.values]
-            query_insert = f"INSERT INTO `{table_name}` ({', '.join(row.keys())}) VALUES ({', '.join(vals)})"
-            with self.connection.cursor() as cursor:
-                cursor.execute(query_insert)
-                print("L'insertion a réussi." if cursor.rowcount > 0 else "L'insertion a échoué.")
-        except:
-            print("Erreur lors de l'insertion")
+            return
 
     def get_last_record_datetime_from_table(self, table_name):
 
