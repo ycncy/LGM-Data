@@ -29,5 +29,5 @@ Liens des README par répertoire :
 - [machine_learning](machine_learning/README.md)
 - [scripts](scripts/README.md)
 - [notebooks](notebooks/README.md)
-- [sql_methods](mysql_operations/README.md)
+- [sql_methods](sql_methods/README.md)
 - [tests](tests/README.md)
