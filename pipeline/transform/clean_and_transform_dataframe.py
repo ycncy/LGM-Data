@@ -26,8 +26,6 @@ def clean_leagues_dataframe(leagues_raw_df):
 
     keys_filter[["name", "image_url"]] = keys_filter[["name", "image_url"]].astype(str)
 
-    keys_filter["modified_at"] = pd.to_datetime(keys_filter["modified_at"])
-
     # Suppression des lignes dupliquées
     cleaned_dataframe = keys_filter.drop_duplicates()
 
@@ -145,33 +143,35 @@ def clean_opponents_dataframe(opponents_raw_df):
 
 
 def clean_players_dataframe(players_raw_dataframe):
-    # On retire les colonne inutile
-    keys_filter_players_dataframe = players_raw_dataframe.drop(["modified_at", "birthday"], axis=1)
+    if not players_raw_dataframe.empty:
+        # On retire les colonne inutile
+        keys_filter_players_dataframe = players_raw_dataframe.drop(["modified_at", "birthday"], axis=1)
 
-    keys_filter_players_dataframe.dropna(subset=["id", "team_id"], inplace=True)
+        keys_filter_players_dataframe.dropna(subset=["id", "team_id"], inplace=True)
 
-    # Conversion des colonnes dans les types souhaités
-    keys_filter_players_dataframe[["first_name", "last_name", "nationality", "slug", "role", "image_url", "name"]] = keys_filter_players_dataframe[["first_name", "last_name", "nationality", "slug", "role", "image_url", "name"]].astype(str)
-    keys_filter_players_dataframe["age"] = keys_filter_players_dataframe["age"].fillna(999).astype('int64')
-    keys_filter_players_dataframe[["id", "team_id"]] = keys_filter_players_dataframe[["id", "team_id"]].astype('int64')
+        # Conversion des colonnes dans les types souhaités
+        keys_filter_players_dataframe[["first_name", "last_name", "nationality", "slug", "role", "image_url", "name"]] = keys_filter_players_dataframe[["first_name", "last_name", "nationality", "slug", "role", "image_url", "name"]].astype(str)
+        keys_filter_players_dataframe["age"] = keys_filter_players_dataframe["age"].fillna(999).astype('int64')
+        keys_filter_players_dataframe[["id", "team_id"]] = keys_filter_players_dataframe[["id", "team_id"]].astype('int64')
 
-    # Suppression des lignes dupliquées
-    cleaned_dataframe = keys_filter_players_dataframe.drop_duplicates()
+        # Suppression des lignes dupliquées
+        cleaned_dataframe = keys_filter_players_dataframe.drop_duplicates()
 
-    return cleaned_dataframe
+        return cleaned_dataframe
 
 
 def clean_teams_dataframe(teams_raw_dataframe):
-    # On récupère uniquement les colonnes de la base de données finale
-    keys_filter = teams_raw_dataframe.filter(["id", "acronym", "image_url", "slug", "name", "location"])
+    if not teams_raw_dataframe.empty:
+        # On récupère uniquement les colonnes de la base de données finale
+        keys_filter = teams_raw_dataframe.filter(["id", "acronym", "image_url", "slug", "name", "location"])
 
-    keys_filter.dropna(inplace=True, subset=["id"])
+        keys_filter.dropna(inplace=True, subset=["id"])
 
-    # Conversion des colonnes dans les types souhaités
-    keys_filter["id"] = keys_filter["id"].astype('int64')
-    keys_filter[["acronym", "image_url", "slug", "name", "location"]] = keys_filter[["acronym", "image_url", "slug", "name", "location"]].astype(str)
+        # Conversion des colonnes dans les types souhaités
+        keys_filter["id"] = keys_filter["id"].astype('int64')
+        keys_filter[["acronym", "image_url", "slug", "name", "location"]] = keys_filter[["acronym", "image_url", "slug", "name", "location"]].astype(str)
 
-    # Suppression des lignes dupliquées
-    cleaned_dataframe = keys_filter.drop_duplicates()
+        # Suppression des lignes dupliquées
+        cleaned_dataframe = keys_filter.drop_duplicates()
 
-    return cleaned_dataframe
+        return cleaned_dataframe
