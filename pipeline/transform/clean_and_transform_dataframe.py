@@ -60,7 +60,7 @@ def clean_tournaments_dataframe(tournaments_raw_df):
     keys_filter[["id", "serie_id"]] = keys_filter[["id", "serie_id"]].astype('int64')
     keys_filter["winner_id"] = keys_filter["winner_id"].fillna(-1).astype('int64')
     keys_filter[["name", "slug", "tier"]] = keys_filter[["name", "slug", "tier"]].astype(str)
-    keys_filter["has_bracket"] = keys_filter["has_bracket"].astype(bool)
+    keys_filter["has_bracket"] = keys_filter["has_bracket"].astype(bool).astype(int)
     keys_filter["begin_at"] = pd.to_datetime(keys_filter["begin_at"], format="%Y-%m-%dT%H:%M:%SZ")
     keys_filter["end_at"] = pd.to_datetime(keys_filter["end_at"], format="%Y-%m-%dT%H:%M:%SZ")
 
@@ -85,7 +85,7 @@ def clean_matches_dataframe(matches_raw_df):
 
     keys_filter[["slug", "status", "name", "match_type"]] = keys_filter[["slug", "status", "name", "match_type"]].astype(str)
 
-    keys_filter["draw"] = keys_filter["draw"].astype(bool)
+    keys_filter["draw"] = keys_filter["draw"].astype(bool).astype(int)
 
     # Suppression des lignes dupliquées
     cleaned_dataframe = keys_filter.drop_duplicates()
@@ -108,7 +108,7 @@ def clean_games_dataframe(games_raw_df):
 
     # Conversion des colonnes dans les types souhaités
     keys_filter[["id", "match_id", "winner_id", "length"]] = keys_filter[["id", "match_id", "winner_id", "length"]].astype('int64')
-    keys_filter[["finished", "forfeit", "complete"]] = keys_filter[["finished", "forfeit", "complete"]].astype(bool)
+    keys_filter[["finished", "forfeit", "complete"]] = keys_filter[["finished", "forfeit", "complete"]].astype(bool).astype(int)
 
     # Suppression des lignes dupliquées
     cleaned_dataframe = keys_filter.drop_duplicates()
@@ -124,7 +124,7 @@ def clean_streams_dataframe(streams_raw_df):
     keys_filter = keys_filter.dropna(how="all")
 
     keys_filter["match_id"] = keys_filter["match_id"].astype('int64')
-    keys_filter["official"] = keys_filter["official"].astype(bool)
+    keys_filter["official"] = keys_filter["official"].astype(bool).astype(int)
 
     # Suppression des lignes dupliquées
     cleaned_dataframe = keys_filter.drop_duplicates()
@@ -158,6 +158,8 @@ def clean_players_dataframe(players_raw_dataframe):
         cleaned_dataframe = keys_filter_players_dataframe.drop_duplicates()
 
         return cleaned_dataframe
+    else:
+        return players_raw_dataframe
 
 
 def clean_teams_dataframe(teams_raw_dataframe):
@@ -175,3 +177,5 @@ def clean_teams_dataframe(teams_raw_dataframe):
         cleaned_dataframe = keys_filter.drop_duplicates()
 
         return cleaned_dataframe
+    else:
+        return teams_raw_dataframe
