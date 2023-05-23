@@ -1,7 +1,7 @@
 import mysql.connector
 import mysql.connector.conversion
+import aiomysql
 import numpy as np
-import pandas as pd
 from sqlalchemy import create_engine
 
 
@@ -13,29 +13,29 @@ class MySQLDataManager:
         self.database_password = database_password
         self.database_name = database_name
         self.connection = None
+        self.pool = None
 
-    def connect_to_database(self):
-        self.connection = mysql.connector.connect(host=self.database_host, user=self.database_user, password=self.database_password, database=self.database_name)
-
+    async def connect_to_database(self):
+        self.pool = await aiomysql.create_pool(
+            host=self.database_host,
+            user=self.database_user,
+            password=self.database_password,
+            db=self.database_name,
+        )
         print("Connecté à la base de données.")
 
-    def close_connection(self):
-        self.connection.close()
-
+    async def close_connection(self):
+        self.pool.close()
+        await self.pool.wait_closed()
         print("Déconnecté de la base de données")
 
-    def get_all_tables(self):
-        cursor = self.connection.cursor()
-
-        cursor.execute("SHOW TABLES")
-
-        tables = []
-
-        for row in cursor:
-            tables.append(row[0])
-
-        cursor.close()
-
+    async def get_all_tables(self):
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cursor:
+                await cursor.execute("SHOW TABLES")
+                tables = []
+                async for row in cursor:
+                    tables.append(row[0])
         return tables
 
     def add_dataframe_to_database(self, dataframe, table_name):
@@ -84,143 +84,61 @@ class MySQLDataManager:
 
             self.close_connection()
 
-    def insert_or_update_new_data_with_specific_column(self, dataframe, table_name, column_to_check):
-        cursor = self.connection.cursor()
+    async def insert_or_update_new_data_with_specific_column(self, dataframe, table_name, column_to_check):
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cursor:
+                if not dataframe.empty:
+                    for index, row in dataframe.iterrows():
+                        query_select = f"SELECT * FROM `{table_name}` WHERE {column_to_check} = {row[column_to_check]}"
 
-        if not dataframe.empty:
-            for index, row in dataframe.iterrows():
-                query_select = f"SELECT * FROM `{table_name}` WHERE id = {row[column_to_check]}"
+                        try:
+                            await cursor.execute(query_select)
 
-                cursor.execute(query_select)
+                            result = await cursor.fetchone()
 
-                result = cursor.fetchone()
+                            if result:
+                                query_update = f"UPDATE `{table_name}` SET "
 
-                if result:
-                    try:
-                        query_update = f"UPDATE `{table_name}` SET "
+                                updates = []
+                                for column, value in row.items():
+                                    update = f"{column} = '{value}'"
+                                    updates.append(update)
 
-                        updates = []
-                        for column, value in row.items():
-                            update = f"{column} = '{value}'"
-                            updates.append(update)
+                                query_update += ", ".join(updates)
+                                query_update += f" WHERE {column_to_check} = {row[column_to_check]}"
 
-                        query_update += ", ".join(updates)
-                        query_update += f" WHERE id = {row[column_to_check]}"
+                                await cursor.execute(query_update)
 
-                        cursor.execute(query_update)
+                            else:
+                                query_insert = f"INSERT INTO `{table_name}` ("
+                                query_insert += ", ".join(row.keys())
+                                query_insert += ") VALUES ("
+                                query_insert += ", ".join([f"'{value.tolist()}'" if isinstance(value, np.ndarray) else f"'{value}'" for value in row.values])
+                                query_insert += ")"
 
-                        if cursor.rowcount > 0:
-                            print("La mise à jour a réussi")
-                        else:
-                            print("Aucune ligne n'a été mise à jour")
-                    except mysql.connector.Error as e:
-                        print(f"Erreur {e}")
+                                await cursor.execute(query_insert)
 
-                else:
-                    try:
-                        query_insert = f"INSERT INTO `{table_name}` ("
-                        query_insert += ", ".join(row.keys())
-                        query_insert += ") VALUES ("
-                        query_insert += ", ".join([f"'{value.tolist()}'" if isinstance(value, np.ndarray) else f"'{value}'" for value in row.values])
-                        query_insert += ")"
+                        except mysql.connector.Error as e:
+                            print(f"Erreur {e}")
 
-                        cursor.execute(query_insert)
+                await conn.commit()
 
-                        if cursor.rowcount > 0:
-                            print("L'insertion a réussi.")
-                        else:
-                            print("L'insertion a échoué.")
 
-                    except:
-                        print("Erreur")
-
-        self.connection.commit()
-
-        cursor.close()
-
-    def insert_or_update_data(self, dataframe, table_name):
-        if "id" in dataframe:
-            self.insert_or_update_new_data_with_specific_column(dataframe, table_name, "id")
-        elif "match_id" in dataframe:
-            self.insert_or_update_new_data_with_specific_column(dataframe, table_name, "match_id")
+    async def insert_or_update_data_async(self, dataframe, table_name):
+        if "id" in dataframe and not dataframe.empty:
+            await self.insert_or_update_new_data_with_specific_column(dataframe, table_name, "id")
+        elif "match_id" in dataframe and not dataframe.empty:
+            await self.insert_or_update_new_data_with_specific_column(dataframe, table_name, "match_id")
         else:
             return
 
-    def get_last_record_datetime_from_table(self, table_name):
 
-        select_all_columns = f"SELECT * FROM `{table_name}` LIMIT 1;"
-
-        cursor = self.connection.cursor()
-
-        cursor.execute(select_all_columns)
-
-        cursor.fetchall()
-
-        column_names = [desc[0] for desc in cursor.description]
-
-        if "begin_at" not in column_names and "modified_at" not in column_names:
-            return ""
-
-        begin_at_select_request = f"SELECT begin_at FROM `{table_name}` ORDER BY begin_at DESC LIMIT 1"
-        modified_at_select_request = f"SELECT modified_at FROM `{table_name}` ORDER BY modified_at DESC LIMIT 1"
-
-        select_request = begin_at_select_request if "begin_at" in column_names else modified_at_select_request
-
-        cursor.execute(select_request)
-
-        last_record_datetime = ""
-
-        for row in cursor:
-            last_record_datetime = row[0]
-        last_record_datetime = pd.to_datetime(last_record_datetime).tz_localize('UTC')
-
-        cursor.close()
-
-        return last_record_datetime
-
-    def get_table_id_list(self, table_name):
-        cursor = self.connection.cursor()
-
-        query = f"SELECT id FROM {table_name}"
-
-        cursor.execute(query)
-
-        id_list = []
-
-        for row in cursor:
-            id_list.append(row[0])
-
-        cursor.close()
-
+    async def get_table_id_list(self, table_name):
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cursor:
+                query = f"SELECT id FROM `{table_name}`"
+                await cursor.execute(query)
+                id_list = []
+                async for row in cursor:
+                    id_list.append(row[0])
         return id_list
-
-    def insert_into_table(self, table_name, dataframe_to_insert):
-        try:
-            cursor = self.connection.cursor()
-
-            cursor.execute(f"SELECT * FROM `{table_name}` LIMIT 1")
-
-            col_names = [i[0] for i in cursor.description]
-
-            df_values = [tuple(x) for x in dataframe_to_insert.to_numpy()]
-
-            query = f"INSERT IGNORE INTO `{table_name}` ({','.join(col_names)}) VALUES ({','.join(['%s'] * len(col_names))})"
-
-            cursor.fetchall()
-
-            cursor.executemany(query, df_values)
-
-            self.connection.commit()
-
-            cursor.close()
-
-            print(f"{cursor.rowcount} enregistrements ajoutés à la table {table_name}")
-
-        except:
-            engine = create_engine(f"mysql+mysqlconnector://{self.database_user}:{self.database_password}@{self.database_host}/{self.database_name}")
-
-            # envoyer le dataframe dans la table 'nom_table' dans la base de données
-            dataframe_to_insert.to_sql(name=table_name, con=engine, if_exists='append', index=False)
-
-            # fermer la connexion à la base de données
-            self.close_connection()
