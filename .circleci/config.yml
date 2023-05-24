@@ -26,7 +26,6 @@ jobs:
 
 
 workflows:
-  version: 2
   sample:
     triggers:
       - schedule:
