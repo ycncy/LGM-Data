@@ -1,7 +1,9 @@
 import os
 import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'pipeline')))
-sys.path.extend(['..\\..\\Data'])
+
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.append(parent_dir)
+
 from pipeline.load.mysql_data_manager import MySQLDataManager
 
 
