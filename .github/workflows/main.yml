@@ -2,7 +2,7 @@ name: Update Database
 
 on:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '0 */1 * * *'
 
 
 jobs:
@@ -22,5 +22,5 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: execute py script # run main.py
-        run: python add_data_until_last_record.py
+      - name: execute py script
+        run: python ./scripts/test.py
