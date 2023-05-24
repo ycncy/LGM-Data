@@ -29,7 +29,7 @@ workflows:
   sample:
     triggers:
       - schedule:
-          cron: "*/5 * * * *"
+          cron: "*/6 * * * *"
           filters:
             branches:
               only:
