@@ -23,6 +23,11 @@ jobs:
       - run:
           name: Run script
           command: python scripts/test.py
+          environment:
+            DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
+            DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+            DATABASE_USER: ${{ secrets.DATABASE_USER }}
+            DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
 
 
 workflows:

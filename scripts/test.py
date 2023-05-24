@@ -9,10 +9,10 @@ from pipeline.load.mysql_data_manager import MySQLDataManager
 
 async def main():
     try:
-        database_host = os.environ['DATABASE_HOST']
-        database_name = os.environ['DATABASE_NAME']
-        database_user = os.environ['DATABASE_USER']
-        database_password = os.environ['DATABASE_PASSWORD']
+        database_host = os.environ.get('DATABASE_HOST')
+        database_name = os.environ.get('DATABASE_NAME')
+        database_user = os.environ.get('DATABASE_USER')
+        database_password = os.environ.get('DATABASE_PASSWORD')
 
         print(database_host)
         print(database_name)
