@@ -25,7 +25,6 @@ jobs:
           command: python scripts/add_data_until_last_record.py
 
 workflows:
-  version: 2
   sample:
     jobs:
       - add_new_data:
