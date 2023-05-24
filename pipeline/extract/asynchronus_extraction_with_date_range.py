@@ -140,26 +140,33 @@ class AsynchronousDateRangeDataExtractor(DataExtractor):
                 first_dataframe["end_at"] = pd.to_datetime(first_dataframe["end_at"], format="%Y-%m-%dT%H:%M:%SZ", errors='coerce')
                 first_dataframe["modified_at"] = pd.to_datetime(first_dataframe["modified_at"], format="%Y-%m-%dT%H:%M:%SZ", errors='coerce')
 
-                date_filtered_dataframe = first_dataframe[first_dataframe.modified_at > last_update_datetime]
+                if "winner.modified_at" in first_dataframe.columns:
+                    first_dataframe["winner.modified_at"] = pd.to_datetime(first_dataframe["winner.modified_at"], format="%Y-%m-%dT%H:%M:%SZ", errors='coerce')
+                    date_filtered_dataframe = first_dataframe[(first_dataframe["modified_at"] >= last_update_datetime) | (first_dataframe["winner.modified_at"] >= last_update_datetime)]
+                else:
+                    date_filtered_dataframe = first_dataframe[(first_dataframe["modified_at"] >= last_update_datetime)]
 
                 matches_raw_df = pd.concat([matches_raw_df, date_filtered_dataframe])
 
-                for match_info in matches_info:
-                    if "games" in match_info:
-                        matches_games_raw_df = pd.concat([matches_games_raw_df, pd.json_normalize(match_info["games"])])
+                if "games" in date_filtered_dataframe.columns:
+                    games_df = pd.json_normalize(date_filtered_dataframe["games"].explode())
 
-                    if "streams_list" in match_info:
-                        streams_df = pd.json_normalize(match_info["streams_list"])
-                        streams_df["match_id"] = match_info["id"]
+                    matches_games_raw_df = pd.concat([matches_games_raw_df, games_df])
 
-                        matches_streams_raw_df = pd.concat([matches_streams_raw_df, streams_df])
+                if "streams_list" in date_filtered_dataframe.columns:
+                    streams_df = pd.json_normalize(date_filtered_dataframe["streams_list"].explode())
+                    streams_df["match_id"] = date_filtered_dataframe["id"]
 
-                    if "opponents" in match_info and isinstance(match_info["opponents"], list) and len(match_info["opponents"]) >= 2:
-                        opponents_dict = [{"home_id": match_info["opponents"][0]["opponent"]["id"], "away_id": match_info["opponents"][1]["opponent"]["id"], "match_id": match_info["id"]}]
+                    matches_streams_raw_df = pd.concat([matches_streams_raw_df, streams_df])
 
-                        opponents_df = pd.DataFrame(opponents_dict)
+                for _, row in date_filtered_dataframe.iterrows():
+                    if "opponents" in date_filtered_dataframe and isinstance(date_filtered_dataframe["opponents"], list) and len(date_filtered_dataframe["opponents"]) >= 2:
+                        if pd.to_datetime(date_filtered_dataframe["opponents"][0]["modified_at"]) >= last_update_datetime or pd.to_datetime(date_filtered_dataframe["opponents"][1]["modified_at"]) >= last_update_datetime:
+                            opponents_dict = [{"home_id": date_filtered_dataframe["opponents"][0]["opponent"]["id"], "away_id": date_filtered_dataframe["opponents"][1]["opponent"]["id"], "match_id": date_filtered_dataframe["id"]}]
 
-                        matches_opponents_raw_df = pd.concat([matches_opponents_raw_df, opponents_df])
+                            opponents_df = pd.DataFrame(opponents_dict)
+
+                            matches_opponents_raw_df = pd.concat([matches_opponents_raw_df, opponents_df])
 
             self.api_call_counter += 1
 
@@ -176,12 +183,23 @@ class AsynchronousDateRangeDataExtractor(DataExtractor):
             results = await asyncio.gather(*tasks)
 
         for result in results:
-            matches_raw_dfs.append(result[0])
-            matches_streams_raw_dfs.append(result[1])
-            matches_games_raw_dfs.append(result[2])
-            matches_opponents_raw_dfs.append(result[3])
+            matches_raw_df, matches_streams_raw_df, matches_games_raw_df, matches_opponents_raw_df = result
 
-        return pd.concat(matches_raw_dfs), pd.concat(matches_streams_raw_dfs), pd.concat(matches_games_raw_dfs), pd.concat(matches_opponents_raw_dfs)
+            if not matches_raw_df.empty:
+                matches_raw_dfs.append(matches_raw_df)
+            if not matches_streams_raw_df.empty:
+                matches_streams_raw_dfs.append(matches_streams_raw_df)
+            if not matches_games_raw_df.empty:
+                matches_games_raw_dfs.append(matches_games_raw_df)
+            if not matches_opponents_raw_df.empty:
+                matches_opponents_raw_dfs.append(matches_opponents_raw_df)
+
+        matches_raw_df = pd.concat(matches_raw_dfs) if len(matches_raw_dfs) > 0 else pd.DataFrame()
+        matches_streams_raw_df = pd.concat(matches_streams_raw_dfs) if len(matches_streams_raw_dfs) > 0 else pd.DataFrame()
+        matches_games_raw_df = pd.concat(matches_games_raw_dfs) if len(matches_games_raw_dfs) > 0 else pd.DataFrame()
+        matches_opponents_raw_df = pd.concat(matches_opponents_raw_dfs) if len(matches_opponents_raw_dfs) > 0 else pd.DataFrame()
+
+        return matches_raw_df, matches_streams_raw_df, matches_games_raw_df, matches_opponents_raw_df
 
     async def fetch_teams_and_players_for_tournament_page(self, tournament_id, page_number, session):
         self.check_api_key()
@@ -216,7 +234,15 @@ class AsynchronousDateRangeDataExtractor(DataExtractor):
             results = await asyncio.gather(*tasks)
 
         for result in results:
+            if result[0].empty:
+                continue
             teams_raw_dfs.append(result[0])
+
+            if result[1].empty:
+                continue
             players_raw_dfs.append(result[1])
+
+        if not teams_raw_dfs or not players_raw_dfs:
+            return pd.DataFrame(), pd.DataFrame()
 
         return pd.concat(teams_raw_dfs), pd.concat(players_raw_dfs)

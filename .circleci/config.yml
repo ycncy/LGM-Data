@@ -4,7 +4,7 @@ orbs:
   python: circleci/python@1.5.0
 
 jobs:
-  build-and-test:
+  add_new_data:
     docker:
       - image: cimg/python:3.10.2
     steps:
@@ -22,10 +22,18 @@ jobs:
           command: pip install -r requirements.txt
       - run:
           name: Run script
-          command: python scripts/test.py
+          command: python scripts/add_data_until_last_record.py
 
 
 workflows:
+  version: 2
   sample:
+    triggers:
+      - schedule:
+          cron: "0 * * * *"
+          filters:
+            branches:
+              only:
+                - main
     jobs:
-      - build-and-test
+      - add_new_data

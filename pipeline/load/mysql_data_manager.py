@@ -1,5 +1,3 @@
-import mysql.connector
-import mysql.connector.conversion
 import aiomysql
 import numpy as np
 from sqlalchemy import create_engine
@@ -101,25 +99,42 @@ class MySQLDataManager:
 
                                 updates = []
                                 for column, value in row.items():
+                                    if column == "name":
+                                        value = value.replace("'", "''")
                                     update = f"{column} = '{value}'"
                                     updates.append(update)
 
                                 query_update += ", ".join(updates)
-                                query_update += f" WHERE {column_to_check} = {row[column_to_check]}"
+                                query_update += f" WHERE {column_to_check} = '{row[column_to_check]}'"
+
+                                print("index :    ", index)
+                                print("row :    ", row)
+                                print("query_update :    ", query_update)
 
                                 await cursor.execute(query_update)
+
+                                if cursor.rowcount >= 1:
+                                    print(f"Mise à jour de la ligne {index} dans la table {table_name} avec succès!")
+                                else:
+                                    print(f"Erreur lors de la mise à jour de la ligne {index} dans la table {table_name}.")
 
                             else:
                                 query_insert = f"INSERT INTO `{table_name}` ("
                                 query_insert += ", ".join(row.keys())
                                 query_insert += ") VALUES ("
-                                query_insert += ", ".join([f"'{value.tolist()}'" if isinstance(value, np.ndarray) else f"'{value}'" for value in row.values])
+                                query_insert += ", ".join([f"'{value.tolist()}'" if isinstance(value, np.ndarray) else f"'{value}'" for value in row.values.tolist()])
                                 query_insert += ")"
 
                                 await cursor.execute(query_insert)
 
-                        except mysql.connector.Error as e:
-                            print(f"Erreur {e}")
+                                if cursor.rowcount >= 1:
+                                    print(f"Insertion de la ligne {index} dans la table {table_name} avec succès!")
+                                else:
+                                    print(f"Erreur lors de l'insertion de la ligne {index} dans la table {table_name}.")
+
+                        except Exception as e:
+                            print(f"Erreur {e}: Skipping to the next iteration.")
+                            continue
 
                 await conn.commit()
 
