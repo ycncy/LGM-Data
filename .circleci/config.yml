@@ -23,11 +23,6 @@ jobs:
       - run:
           name: Run script
           command: python scripts/test.py
-          environment:
-            DATABASE_HOST: <<DATABASE_HOST>>
-            DATABASE_NAME: <<DATABASE_NAME>>
-            DATABASE_USER: <<DATABASE_USER>>
-            DATABASE_PASSWORD: <<DATABASE_PASSWORD>>
 
 
 workflows:

@@ -9,17 +9,7 @@ from pipeline.load.mysql_data_manager import MySQLDataManager
 
 async def main():
     try:
-        database_host = os.environ.get('DATABASE_HOST')
-        database_name = os.environ.get('DATABASE_NAME')
-        database_user = os.environ.get('DATABASE_USER')
-        database_password = os.environ.get('DATABASE_PASSWORD')
-
-        print(database_host)
-        print(database_name)
-        print(database_user)
-        print(database_password)
-
-        mysql_manager = MySQLDataManager(database_host, database_user, database_password, database_name)
+        mysql_manager = MySQLDataManager("lgm.cihggjssark1.eu-west-3.rds.amazonaws.com", "admin", "azertyuiop", "main")
         await mysql_manager.connect_to_database()
 
     except:
