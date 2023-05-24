@@ -34,6 +34,10 @@ def clean_series_dataframe(series_raw_df):
     keys_filter[["full_name", "slug"]] = keys_filter[["full_name", "slug"]].astype(str)
     keys_filter["begin_at"] = pd.to_datetime(keys_filter["begin_at"], format="%Y-%m-%dT%H:%M:%SZ")
     keys_filter["end_at"] = pd.to_datetime(keys_filter["end_at"], format="%Y-%m-%dT%H:%M:%SZ")
+
+    keys_filter["begin_at"] = keys_filter["begin_at"].fillna(pd.to_datetime("2035-01-01 12:00:00"))
+    keys_filter["end_at"] = keys_filter["end_at"].fillna(pd.to_datetime("2035-01-01 12:00:00"))
+
     cleaned_dataframe = keys_filter.drop_duplicates()
     return cleaned_dataframe
 
@@ -50,6 +54,10 @@ def clean_tournaments_dataframe(tournaments_raw_df):
     keys_filter["has_bracket"] = keys_filter["has_bracket"].astype(bool).astype(int)
     keys_filter["begin_at"] = pd.to_datetime(keys_filter["begin_at"], format="%Y-%m-%dT%H:%M:%SZ")
     keys_filter["end_at"] = pd.to_datetime(keys_filter["end_at"], format="%Y-%m-%dT%H:%M:%SZ")
+
+    keys_filter["begin_at"] = keys_filter["begin_at"].fillna(pd.to_datetime("2035-01-01 12:00:00"))
+    keys_filter["end_at"] = keys_filter["end_at"].fillna(pd.to_datetime("2035-01-01 12:00:00"))
+
     cleaned_dataframe = keys_filter.drop_duplicates()
     return cleaned_dataframe
 
