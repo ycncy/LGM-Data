@@ -107,10 +107,6 @@ class MySQLDataManager:
                                 query_update += ", ".join(updates)
                                 query_update += f" WHERE {column_to_check} = '{row[column_to_check]}'"
 
-                                print("index :    ", index)
-                                print("row :    ", row)
-                                print("query_update :    ", query_update)
-
                                 await cursor.execute(query_update)
 
                                 if cursor.rowcount >= 1:
