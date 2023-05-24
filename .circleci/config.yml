@@ -24,15 +24,19 @@ jobs:
           name: Run script
           command: python scripts/add_data_until_last_record.py
 
-
 workflows:
+  version: 2
   sample:
-    triggers:
-      - schedule:
-          cron: "*/6 * * * *"
+    jobs:
+      - add_new_data:
           filters:
             branches:
               only:
                 - main
-    jobs:
-      - add_new_data
+    triggers:
+      - schedule:
+          cron: "0,5,10,15,20,25,30,35,40,45,50,55 * * * *"
+          filters:
+            branches:
+              only:
+                - main
