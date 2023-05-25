@@ -10,6 +10,8 @@ import asyncio
 import aiomysql
 import pandas as pd
 
+from generate_representation import *
+
 
 class DataCollector:
 
@@ -58,8 +60,8 @@ class DataCollector:
                 await cursor.execute(select_matches_detailed_data_query)
                 select_query_result = await cursor.fetchall()
 
-        dataframe_from_select_query = pd.DataFrame(select_query_result, columns=["id", "name", "tournament_id", "number_of_games", "winner_id", "home_id", "away_id", "tournament_tier", "tournament_has_bracket", "tournament_name"])
-        match_ids = dataframe_from_select_query["id"].tolist()
+        dataframe_from_select_query = pd.DataFrame(select_query_result, columns=["match_id", "name", "tournament_id", "number_of_games", "winner_id", "home_id", "away_id", "tournament_tier", "tournament_has_bracket", "tournament_name"])
+        match_ids = dataframe_from_select_query["match_id"].tolist()
 
         tasks = []
         for match_id in match_ids:
@@ -68,7 +70,7 @@ class DataCollector:
 
         matches_detailed_results = await asyncio.gather(*tasks)
 
-        final_dataframe = pd.merge(dataframe_from_select_query, pd.DataFrame(matches_detailed_results), left_on="id", right_on="match_id")
+        final_dataframe = pd.merge(dataframe_from_select_query, pd.DataFrame(matches_detailed_results), left_on="match_id", right_on="match_id")
 
         return final_dataframe
 
@@ -76,7 +78,8 @@ class DataCollector:
 async def main():
     mysql_data_manager = DataCollector("lgm.cihggjssark1.eu-west-3.rds.amazonaws.com", "admin", "azertyuiop", "main")
     await mysql_data_manager.connect_to_database()
-    await mysql_data_manager.collect_all_matches_infos_to_train()
+    data = await mysql_data_manager.collect_all_matches_infos_to_train()
+    print(generate_data_representations(clean_matches_infos_dataframe(data)))
     await mysql_data_manager.close_connection()
 
 
