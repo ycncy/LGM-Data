@@ -79,7 +79,7 @@ async def main():
     mysql_data_manager = DataCollector("lgm.cihggjssark1.eu-west-3.rds.amazonaws.com", "admin", "azertyuiop", "main")
     await mysql_data_manager.connect_to_database()
     data = await mysql_data_manager.collect_all_matches_infos_to_train()
-    print(generate_data_representations(clean_matches_infos_dataframe(data)))
+    final_dataframe = generate_data_representations(clean_matches_infos_dataframe(data))
     await mysql_data_manager.close_connection()
 
 
