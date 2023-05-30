@@ -6,11 +6,9 @@ Result : winner_id, games_result (résultat pour chaque game en gros noté combi
 
 """
 import asyncio
-
 import aiomysql
-import pandas as pd
 
-from generate_representation import *
+from data_processing import *
 
 
 class DataCollector:
@@ -48,9 +46,8 @@ class DataCollector:
 
     async def collect_all_matches_infos_to_train(self):
         select_matches_detailed_data_query = """
-            SELECT m.id, m.name, m.tournament_id, m.number_of_games, m.winner_id, mo.home_id, mo.away_id, t.tier, t.has_bracket, t.name
+            SELECT m.id, m.name, m.tournament_id, m.number_of_games, m.winner_id, m.home_id, m.away_id, t.tier, t.has_bracket, t.name
             FROM matchs AS m
-            INNER JOIN match_opponent AS mo ON m.id = mo.match_id
             INNER JOIN tournament AS t ON m.tournament_id = t.id
             WHERE m.status = 'finished' AND m.draw = 0
         """
@@ -73,14 +70,3 @@ class DataCollector:
         final_dataframe = pd.merge(dataframe_from_select_query, pd.DataFrame(matches_detailed_results), left_on="match_id", right_on="match_id")
 
         return final_dataframe
-
-
-async def main():
-    mysql_data_manager = DataCollector("lgm.cihggjssark1.eu-west-3.rds.amazonaws.com", "admin", "azertyuiop", "main")
-    await mysql_data_manager.connect_to_database()
-    data = await mysql_data_manager.collect_all_matches_infos_to_train()
-    final_dataframe = generate_data_representations(clean_matches_infos_dataframe(data))
-    await mysql_data_manager.close_connection()
-
-
-asyncio.run(main())
