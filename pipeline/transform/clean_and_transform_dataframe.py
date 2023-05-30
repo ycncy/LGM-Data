@@ -81,8 +81,10 @@ def clean_matches_dataframe(matches_raw_df):
         return matches_raw_df
 
     keys_filter = matches_raw_df.filter(items=["id", "name", "slug", "match_type", "number_of_games", "tournament_id", "status", "draw", "winner_id", "original_scheduled_at", "scheduled_at", "begin_at", "end_at", "games_id_list", "home_id", "away_id"])
+
     keys_filter = keys_filter[pd.notnull(keys_filter.id)]
     keys_filter = keys_filter.dropna(subset=["id", "tournament_id"])
+
     keys_filter[["id", "tournament_id"]] = keys_filter[["id", "tournament_id"]].astype('int64')
     keys_filter[["winner_id", "number_of_games", "home_id", "away_id"]] = keys_filter[["winner_id", "number_of_games", "home_id", "away_id"]].fillna(-1).astype('int64')
     keys_filter[["slug", "status", "name", "match_type"]] = keys_filter[["slug", "status", "name", "match_type"]].astype(str)
@@ -103,6 +105,7 @@ def clean_matches_dataframe(matches_raw_df):
 
     keys_filter["draw"] = keys_filter["draw"].astype(bool).astype(int)
     cleaned_dataframe = keys_filter.drop_duplicates()
+
     return cleaned_dataframe
 
 
@@ -113,8 +116,20 @@ def clean_games_dataframe(games_raw_df):
     keys_filter = games_raw_df.filter(items=["id", "begin_at", "end_at", "match_id", "finished", "winner.id", "forfeit", "length", "complete"])
     keys_filter = keys_filter.dropna(how="all")
     keys_filter.rename(columns={"winner.id": "winner_id"}, inplace=True)
-    keys_filter.dropna(inplace=True, subset=["begin_at", "end_at"])
+
+    keys_filter["begin_at"] = pd.to_datetime(keys_filter["begin_at"], format="%Y-%m-%dT%H:%M:%SZ")
+    keys_filter["end_at"] = pd.to_datetime(keys_filter["end_at"], format="%Y-%m-%dT%H:%M:%SZ")
+
+    invalid_date = pd.to_datetime("2035-01-01 12:00:00")
+
+    keys_filter["begin_at"] = keys_filter["begin_at"].fillna(invalid_date)
+    keys_filter["end_at"] = keys_filter["end_at"].fillna(invalid_date)
+
+    keys_filter["begin_at"] = keys_filter["begin_at"].dt.strftime("%Y-%m-%d %H:%M:%S")
+    keys_filter["end_at"] = keys_filter["end_at"].dt.strftime("%Y-%m-%d %H:%M:%S")
+
     keys_filter[["winner_id", "length"]] = keys_filter[["winner_id", "length"]].fillna(-1)
+
     keys_filter = keys_filter[pd.notnull(keys_filter.id)]
     keys_filter[["id", "match_id", "winner_id", "length"]] = keys_filter[["id", "match_id", "winner_id", "length"]].astype('int64')
     keys_filter[["finished", "forfeit", "complete"]] = keys_filter[["finished", "forfeit", "complete"]].astype(bool).astype(int)

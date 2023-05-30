@@ -134,7 +134,6 @@ class AsynchronousDateRangeDataExtractor(DataExtractor):
         matches_raw_df = pd.DataFrame()
         matches_streams_raw_df = pd.DataFrame()
         matches_games_raw_df = pd.DataFrame()
-        matches_opponents_raw_df = pd.DataFrame()
 
         async with session.get(url) as response:
             matches_info = await response.json()
@@ -165,22 +164,13 @@ class AsynchronousDateRangeDataExtractor(DataExtractor):
 
                     matches_streams_raw_df = pd.concat([matches_streams_raw_df, streams_df])
 
-                for _, row in date_filtered_dataframe.iterrows():
-                    if "opponents" in date_filtered_dataframe and isinstance(date_filtered_dataframe["opponents"], list) and len(date_filtered_dataframe["opponents"]) >= 2:
-                        if pd.to_datetime(date_filtered_dataframe["opponents"][0]["modified_at"]) >= last_update_datetime or pd.to_datetime(date_filtered_dataframe["opponents"][1]["modified_at"]) >= last_update_datetime:
-                            opponents_dict = [{"home_id": date_filtered_dataframe["opponents"][0]["opponent"]["id"], "away_id": date_filtered_dataframe["opponents"][1]["opponent"]["id"], "match_id": date_filtered_dataframe["id"]}]
-
-                            opponents_df = pd.DataFrame(opponents_dict)
-
-                            matches_opponents_raw_df = pd.concat([matches_opponents_raw_df, opponents_df])
+                if "opponents" in matches_raw_df.columns:
+                    matches_raw_df["home_id"] = matches_raw_df["opponents"].apply(lambda opponents: opponents[0]["opponent"]["id"] if len(opponents) >= 2 else np.nan)
+                    matches_raw_df["away_id"] = matches_raw_df["opponents"].apply(lambda opponents: opponents[1]["opponent"]["id"] if len(opponents) >= 2 else np.nan)
 
             self.api_call_counter += 1
 
-        if not matches_opponents_raw_df.empty and not matches_raw_df.empty:
-            matches_raw_df = pd.merge(matches_raw_df, matches_opponents_raw_df, left_on="id", right_on="match_id", how="left")
-        elif not matches_raw_df.empty and matches_opponents_raw_df.empty:
-            matches_raw_df["home_id"] = np.nan
-            matches_raw_df["away_id"] = np.nan
+            print(matches_raw_df[matches_raw_df.id == 77822])
 
         return matches_raw_df, matches_streams_raw_df, matches_games_raw_df
 
