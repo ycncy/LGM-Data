@@ -35,8 +35,16 @@ def clean_series_dataframe(series_raw_df):
     keys_filter["begin_at"] = pd.to_datetime(keys_filter["begin_at"], format="%Y-%m-%dT%H:%M:%SZ")
     keys_filter["end_at"] = pd.to_datetime(keys_filter["end_at"], format="%Y-%m-%dT%H:%M:%SZ")
 
-    keys_filter["begin_at"] = keys_filter["begin_at"].fillna(pd.to_datetime("2035-01-01 12:00:00"))
-    keys_filter["end_at"] = keys_filter["end_at"].fillna(pd.to_datetime("2035-01-01 12:00:00"))
+    keys_filter["begin_at"] = pd.to_datetime(keys_filter["begin_at"], format="%Y-%m-%dT%H:%M:%SZ")
+    keys_filter["end_at"] = pd.to_datetime(keys_filter["end_at"], format="%Y-%m-%dT%H:%M:%SZ")
+
+    invalid_date = pd.to_datetime("2035-01-01 12:00:00")
+
+    keys_filter["begin_at"] = keys_filter["begin_at"].fillna(invalid_date)
+    keys_filter["end_at"] = keys_filter["end_at"].fillna(invalid_date)
+
+    keys_filter["begin_at"] = keys_filter["begin_at"].dt.strftime("%Y-%m-%d %H:%M:%S")
+    keys_filter["end_at"] = keys_filter["end_at"].dt.strftime("%Y-%m-%d %H:%M:%S")
 
     cleaned_dataframe = keys_filter.drop_duplicates()
     return cleaned_dataframe
@@ -52,11 +60,17 @@ def clean_tournaments_dataframe(tournaments_raw_df):
     keys_filter["winner_id"] = keys_filter["winner_id"].fillna(-1).astype('int64')
     keys_filter[["name", "slug", "tier"]] = keys_filter[["name", "slug", "tier"]].astype(str)
     keys_filter["has_bracket"] = keys_filter["has_bracket"].astype(bool).astype(int)
+
     keys_filter["begin_at"] = pd.to_datetime(keys_filter["begin_at"], format="%Y-%m-%dT%H:%M:%SZ")
     keys_filter["end_at"] = pd.to_datetime(keys_filter["end_at"], format="%Y-%m-%dT%H:%M:%SZ")
 
-    keys_filter["begin_at"] = keys_filter["begin_at"].fillna(pd.to_datetime("2035-01-01 12:00:00"))
-    keys_filter["end_at"] = keys_filter["end_at"].fillna(pd.to_datetime("2035-01-01 12:00:00"))
+    invalid_date = pd.to_datetime("2035-01-01 12:00:00")
+
+    keys_filter["begin_at"] = keys_filter["begin_at"].fillna(invalid_date)
+    keys_filter["end_at"] = keys_filter["end_at"].fillna(invalid_date)
+
+    keys_filter["begin_at"] = keys_filter["begin_at"].dt.strftime("%Y-%m-%d %H:%M:%S")
+    keys_filter["end_at"] = keys_filter["end_at"].dt.strftime("%Y-%m-%d %H:%M:%S")
 
     cleaned_dataframe = keys_filter.drop_duplicates()
     return cleaned_dataframe
@@ -66,12 +80,27 @@ def clean_matches_dataframe(matches_raw_df):
     if matches_raw_df.empty:
         return matches_raw_df
 
-    keys_filter = matches_raw_df.filter(items=["id", "name", "slug", "match_type", "number_of_games", "tournament_id", "status", "draw", "winner_id", "original_scheduled_at", "scheduled_at", "begin_at", "end_at", "games_id_list"])
+    keys_filter = matches_raw_df.filter(items=["id", "name", "slug", "match_type", "number_of_games", "tournament_id", "status", "draw", "winner_id", "original_scheduled_at", "scheduled_at", "begin_at", "end_at", "games_id_list", "home_id", "away_id"])
     keys_filter = keys_filter[pd.notnull(keys_filter.id)]
     keys_filter = keys_filter.dropna(subset=["id", "tournament_id"])
     keys_filter[["id", "tournament_id"]] = keys_filter[["id", "tournament_id"]].astype('int64')
-    keys_filter[["winner_id", "number_of_games"]] = keys_filter[["winner_id", "number_of_games"]].fillna(-1).astype('int64')
+    keys_filter[["winner_id", "number_of_games", "home_id", "away_id"]] = keys_filter[["winner_id", "number_of_games", "home_id", "away_id"]].fillna(-1).astype('int64')
     keys_filter[["slug", "status", "name", "match_type"]] = keys_filter[["slug", "status", "name", "match_type"]].astype(str)
+
+    keys_filter["begin_at"] = pd.to_datetime(keys_filter["begin_at"], format="%Y-%m-%dT%H:%M:%SZ")
+    keys_filter["end_at"] = pd.to_datetime(keys_filter["end_at"], format="%Y-%m-%dT%H:%M:%SZ")
+
+    invalid_date = pd.to_datetime("2035-01-01 12:00:00")
+
+    keys_filter["begin_at"] = keys_filter["begin_at"].fillna(invalid_date)
+    keys_filter["end_at"] = keys_filter["end_at"].fillna(invalid_date)
+
+    keys_filter["begin_at"] = keys_filter["begin_at"].dt.strftime("%Y-%m-%d %H:%M:%S")
+    keys_filter["end_at"] = keys_filter["end_at"].dt.strftime("%Y-%m-%d %H:%M:%S")
+
+    keys_filter["original_scheduled_at"] = invalid_date.strftime("%Y-%m-%d %H:%M:%S")
+    keys_filter["scheduled_at"] = invalid_date.strftime("%Y-%m-%d %H:%M:%S")
+
     keys_filter["draw"] = keys_filter["draw"].astype(bool).astype(int)
     cleaned_dataframe = keys_filter.drop_duplicates()
     return cleaned_dataframe
@@ -103,16 +132,6 @@ def clean_streams_dataframe(streams_raw_df):
     keys_filter["match_id"] = keys_filter["match_id"].astype('int64')
     keys_filter["official"] = keys_filter["official"].astype(bool).astype(int)
     cleaned_dataframe = keys_filter.drop_duplicates()
-    return cleaned_dataframe
-
-
-def clean_opponents_dataframe(opponents_raw_df):
-    if opponents_raw_df.empty:
-        return opponents_raw_df
-
-    opponents_raw_df[["match_id", "home_id", "away_id"]] = opponents_raw_df[["match_id", "home_id", "away_id"]].fillna(-1).astype('int64')
-    opponents_raw_df.set_index("match_id", inplace=True)
-    cleaned_dataframe = opponents_raw_df.drop_duplicates()
     return cleaned_dataframe
 
 
