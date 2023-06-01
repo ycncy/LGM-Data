@@ -12,7 +12,7 @@ class AsynchronousDateRangeDataExtractor(DataExtractor):
     def __init__(self):
         super().__init__()
 
-    async def fetch_leagues_for_videogame(self, videogame_id, session, last_record_datetime, current_datetime):
+    async def fetch_leagues_for_videogame(self, videogame_id, session, last_record_datetime):
         self.check_api_key()
         url = f"{self.api_url}/videogames/{videogame_id}/leagues?sort=-modified_at&page=1&per_page=100"
 
@@ -21,9 +21,9 @@ class AsynchronousDateRangeDataExtractor(DataExtractor):
 
             first_dataframe = pd.json_normalize(response)
 
-            first_dataframe["modified_at"] = pd.to_datetime(first_dataframe["modified_at"], format="%Y-%m-%dT%H:%M:%SZ", errors='coerce')
+            first_dataframe["modified_at"] = pd.to_datetime(first_dataframe["modified_at"], format="%Y-%m-%dT%H:%M:%SZ")
 
-            date_filtered_dataframe = first_dataframe.loc[(first_dataframe.modified_at >= last_record_datetime) & (first_dataframe.modified_at <= current_datetime)]
+            date_filtered_dataframe = first_dataframe.loc[(first_dataframe.modified_at >= last_record_datetime)]
 
             date_filtered_dataframe["videogame_id"] = videogame_id
 
@@ -31,11 +31,12 @@ class AsynchronousDateRangeDataExtractor(DataExtractor):
 
         return date_filtered_dataframe
 
-    async def fetch_leagues_with_date_range(self, last_record_datetime, current_datetime, videogames_id_list):
+    async def fetch_leagues_with_date_range(self, last_record_datetime, videogames_id_list):
+        print(self.api_key)
         leagues_df = pd.DataFrame()
 
         async with aiohttp.ClientSession(headers=self.header) as session:
-            tasks = [self.fetch_leagues_for_videogame(videogame_id, session, last_record_datetime, current_datetime) for videogame_id in videogames_id_list]
+            tasks = [self.fetch_leagues_for_videogame(videogame_id, session, last_record_datetime) for videogame_id in videogames_id_list]
             results = await asyncio.gather(*tasks)
 
         for result in results:
@@ -43,7 +44,7 @@ class AsynchronousDateRangeDataExtractor(DataExtractor):
 
         return leagues_df
 
-    async def fetch_series_for_league(self, league_id, session, last_update_datetime, current_datetime):
+    async def fetch_series_for_league(self, league_id, session, last_update_datetime):
         series_df = pd.DataFrame()
 
         self.check_api_key()
@@ -57,11 +58,11 @@ class AsynchronousDateRangeDataExtractor(DataExtractor):
 
             if not first_dataframe.empty:
                 if "modified_at" in first_dataframe.columns:
-                    first_dataframe["begin_at"] = pd.to_datetime(first_dataframe["begin_at"], format="%Y-%m-%dT%H:%M:%SZ", errors='coerce')
-                    first_dataframe["end_at"] = pd.to_datetime(first_dataframe["end_at"], format="%Y-%m-%dT%H:%M:%SZ", errors='coerce')
-                    first_dataframe["modified_at"] = pd.to_datetime(first_dataframe["modified_at"], format="%Y-%m-%dT%H:%M:%SZ", errors='coerce')
+                    first_dataframe["begin_at"] = pd.to_datetime(first_dataframe["begin_at"], format="%Y-%m-%dT%H:%M:%SZ")
+                    first_dataframe["end_at"] = pd.to_datetime(first_dataframe["end_at"], format="%Y-%m-%dT%H:%M:%SZ")
+                    first_dataframe["modified_at"] = pd.to_datetime(first_dataframe["modified_at"], format="%Y-%m-%dT%H:%M:%SZ")
 
-                    date_filtered_dataframe = first_dataframe[(first_dataframe.modified_at >= last_update_datetime) & (first_dataframe.modified_at <= current_datetime)]
+                    date_filtered_dataframe = first_dataframe[(first_dataframe.modified_at >= last_update_datetime)]
 
                     date_filtered_dataframe = date_filtered_dataframe.copy().reset_index(drop=False)
                     date_filtered_dataframe.insert(len(date_filtered_dataframe.columns), "videogame_id", response[0]["videogame"]["id"])
@@ -72,11 +73,13 @@ class AsynchronousDateRangeDataExtractor(DataExtractor):
 
         return series_df
 
-    async def fetch_series_with_date_range(self, leagues_id_list, last_update_datetime, current_datetime):
+    async def fetch_series_with_date_range(self, leagues_id_list, last_update_datetime):
+        print(self.api_key)
+
         series_df = pd.DataFrame()
 
         async with aiohttp.ClientSession(headers=self.header) as session:
-            tasks = [self.fetch_series_for_league(league_id, session, last_update_datetime, current_datetime) for league_id in leagues_id_list]
+            tasks = [self.fetch_series_for_league(league_id, session, last_update_datetime) for league_id in leagues_id_list]
             results = await asyncio.gather(*tasks)
 
         for result in results:
@@ -84,7 +87,7 @@ class AsynchronousDateRangeDataExtractor(DataExtractor):
 
         return series_df
 
-    async def fetch_tournaments_for_serie(self, serie_id, session, last_update_datetime, current_datetime):
+    async def fetch_tournaments_for_serie(self, serie_id, session, last_update_datetime):
         self.check_api_key()
         url = f"{self.api_url}/series/{serie_id}/tournaments?sort=-modified_at&page=1&per_page=100"
 
@@ -99,11 +102,11 @@ class AsynchronousDateRangeDataExtractor(DataExtractor):
 
                     if not first_dataframe.empty:
                         if "begin_at" in first_dataframe.columns:
-                            first_dataframe["begin_at"] = pd.to_datetime(first_dataframe["begin_at"], format="%Y-%m-%dT%H:%M:%SZ", errors='coerce')
-                            first_dataframe["end_at"] = pd.to_datetime(first_dataframe["end_at"], format="%Y-%m-%dT%H:%M:%SZ", errors='coerce')
-                            first_dataframe["modified_at"] = pd.to_datetime(first_dataframe["modified_at"], format="%Y-%m-%dT%H:%M:%SZ", errors='coerce')
+                            first_dataframe["begin_at"] = pd.to_datetime(first_dataframe["begin_at"], format="%Y-%m-%dT%H:%M:%SZ")
+                            first_dataframe["end_at"] = pd.to_datetime(first_dataframe["end_at"], format="%Y-%m-%dT%H:%M:%SZ")
+                            first_dataframe["modified_at"] = pd.to_datetime(first_dataframe["modified_at"], format="%Y-%m-%dT%H:%M:%SZ")
 
-                            date_filtered_dataframe = first_dataframe[(first_dataframe.modified_at >= last_update_datetime) & (first_dataframe.modified_at <= current_datetime)]
+                            date_filtered_dataframe = first_dataframe[(first_dataframe.modified_at >= last_update_datetime)]
 
                             date_filtered_dataframe = date_filtered_dataframe.copy().reset_index(drop=False)
                             date_filtered_dataframe.insert(len(date_filtered_dataframe.columns), "videogame_id", tournaments_info[0]["videogame"]["id"])
@@ -115,11 +118,13 @@ class AsynchronousDateRangeDataExtractor(DataExtractor):
 
         return date_filtered_dataframe
 
-    async def fetch_tournaments_with_date_range(self, series_id_list, last_update_datetime, current_datetime):
+    async def fetch_tournaments_with_date_range(self, series_id_list, last_update_datetime):
+        print(self.api_key)
+
         tournaments_df = pd.DataFrame()
 
         async with aiohttp.ClientSession(headers=self.header) as session:
-            tasks = [self.fetch_tournaments_for_serie(serie_id, session, last_update_datetime, current_datetime) for serie_id in series_id_list]
+            tasks = [self.fetch_tournaments_for_serie(serie_id, session, last_update_datetime) for serie_id in series_id_list]
             results = await asyncio.gather(*tasks)
 
         for result in results:
@@ -131,55 +136,72 @@ class AsynchronousDateRangeDataExtractor(DataExtractor):
         self.check_api_key()
         url = f"{self.api_url}/tournaments/{tournament_id}/matches"
 
+        if tournament_id == 10619:
+            print(url)
+
         matches_raw_df = pd.DataFrame()
         matches_streams_raw_df = pd.DataFrame()
         matches_games_raw_df = pd.DataFrame()
 
-        async with session.get(url) as response:
-            matches_info = await response.json()
+        try:
+            async with session.get(url, headers=self.header) as response:
+                matches_info = await response.json()
 
-            first_dataframe = pd.json_normalize(matches_info)
+                first_dataframe = pd.json_normalize(matches_info)
 
-            if "begin_at" in first_dataframe.columns:
-                first_dataframe["begin_at"] = pd.to_datetime(first_dataframe["begin_at"], format="%Y-%m-%dT%H:%M:%SZ", errors='coerce')
-                first_dataframe["end_at"] = pd.to_datetime(first_dataframe["end_at"], format="%Y-%m-%dT%H:%M:%SZ", errors='coerce')
-                first_dataframe["modified_at"] = pd.to_datetime(first_dataframe["modified_at"], format="%Y-%m-%dT%H:%M:%SZ", errors='coerce')
+                if tournament_id == 10619:
+                    print(first_dataframe)
 
-                if "winner.modified_at" in first_dataframe.columns:
-                    first_dataframe["winner.modified_at"] = pd.to_datetime(first_dataframe["winner.modified_at"], format="%Y-%m-%dT%H:%M:%SZ", errors='coerce')
-                    date_filtered_dataframe = first_dataframe[(first_dataframe["modified_at"] >= last_update_datetime) | (first_dataframe["winner.modified_at"] >= last_update_datetime)]
-                else:
-                    date_filtered_dataframe = first_dataframe[(first_dataframe["modified_at"] >= last_update_datetime)]
+                if "begin_at" in first_dataframe.columns:
+                    first_dataframe["begin_at"] = pd.to_datetime(first_dataframe["begin_at"], format="%Y-%m-%dT%H:%M:%SZ")
+                    first_dataframe["end_at"] = pd.to_datetime(first_dataframe["end_at"], format="%Y-%m-%dT%H:%M:%SZ")
+                    first_dataframe["modified_at"] = pd.to_datetime(first_dataframe["modified_at"], format="%Y-%m-%dT%H:%M:%SZ")
 
-                matches_raw_df = pd.concat([matches_raw_df, date_filtered_dataframe])
+                    if "winner.modified_at" in first_dataframe.columns:
+                        first_dataframe["winner.modified_at"] = pd.to_datetime(first_dataframe["winner.modified_at"], format="%Y-%m-%dT%H:%M:%SZ")
+                        date_filtered_dataframe = first_dataframe[(first_dataframe["modified_at"] >= last_update_datetime) | (first_dataframe["winner.modified_at"] >= last_update_datetime)]
+                    else:
+                        date_filtered_dataframe = first_dataframe[(first_dataframe["modified_at"] >= last_update_datetime)]
 
-                if "games" in date_filtered_dataframe.columns:
-                    games_df = pd.json_normalize(date_filtered_dataframe["games"].explode())
+                    matches_raw_df = pd.concat([matches_raw_df, date_filtered_dataframe])
 
-                    matches_games_raw_df = pd.concat([matches_games_raw_df, games_df])
+                    if "games" in date_filtered_dataframe.columns:
+                        games_df = pd.json_normalize(date_filtered_dataframe["games"].explode())
 
-                if "streams_list" in date_filtered_dataframe.columns:
-                    streams_df = pd.json_normalize(date_filtered_dataframe["streams_list"].explode())
-                    streams_df["match_id"] = date_filtered_dataframe["id"]
+                        matches_games_raw_df = pd.concat([matches_games_raw_df, games_df])
 
-                    matches_streams_raw_df = pd.concat([matches_streams_raw_df, streams_df])
+                    if "streams_list" in date_filtered_dataframe.columns:
+                        streams_df = pd.json_normalize(date_filtered_dataframe["streams_list"].explode())
+                        streams_df["match_id"] = date_filtered_dataframe["id"]
 
-                if "opponents" in matches_raw_df.columns:
-                    matches_raw_df["home_id"] = matches_raw_df["opponents"].apply(lambda opponents: opponents[0]["opponent"]["id"] if len(opponents) >= 2 else np.nan)
-                    matches_raw_df["away_id"] = matches_raw_df["opponents"].apply(lambda opponents: opponents[1]["opponent"]["id"] if len(opponents) >= 2 else np.nan)
+                        matches_streams_raw_df = pd.concat([matches_streams_raw_df, streams_df])
 
-            self.api_call_counter += 1
+                    if "opponents" in matches_raw_df.columns:
+                        matches_raw_df["home_id"] = matches_raw_df["opponents"].apply(lambda opponents: opponents[0]["opponent"]["id"] if len(opponents) >= 2 else np.nan)
+                        matches_raw_df["away_id"] = matches_raw_df["opponents"].apply(lambda opponents: opponents[1]["opponent"]["id"] if len(opponents) >= 2 else np.nan)
 
-            print(matches_raw_df[matches_raw_df.id == 77822])
+
+        except Exception as e:
+            print(e)
+
+        self.api_call_counter += 1
 
         return matches_raw_df, matches_streams_raw_df, matches_games_raw_df
 
     async def fetch_raw_all_matches_infos_with_date_range(self, tournaments_id_list, last_update_datetime):
+        self.api_key_index = self.api_key_index + 1
+        self.set_api_key(self.api_key_list[self.api_key_index])
+        self.api_call_counter = 0
+
+        print(len(tournaments_id_list))
+        print(self.header)
+        print(self.api_key)
+
         matches_raw_dfs = []
         matches_streams_raw_dfs = []
         matches_games_raw_dfs = []
 
-        async with aiohttp.ClientSession(headers=self.header) as session:
+        async with aiohttp.ClientSession() as session:
             tasks = [self.fetch_matches_for_tournament(tournament_id, session, last_update_datetime) for tournament_id in tournaments_id_list]
             results = await asyncio.gather(*tasks)
 
@@ -244,3 +266,6 @@ class AsynchronousDateRangeDataExtractor(DataExtractor):
             return pd.DataFrame(), pd.DataFrame()
 
         return pd.concat(teams_raw_dfs), pd.concat(players_raw_dfs)
+
+    def set_api_key_index(self, new_index):
+        self.api_key_index = new_index
