@@ -1,6 +1,8 @@
 import os
 import sys
 
+import pandas as pd
+
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(parent_dir)
 
@@ -21,32 +23,30 @@ mysql_data_manager = MySQLDataManager("34.155.63.44", "admin", "azertyuiop", "ma
 async def main():
     await mysql_data_manager.connect_to_database()
 
-    current_datetime = pd.to_datetime(datetime.datetime.now())
-    last_record_datetime = pd.to_datetime(datetime.datetime.now() - datetime.timedelta(hours=1))
-    last_record_datetime = "2023-05-22 00:00:00"
+    last_record_datetime = pd.to_datetime("2023-05-22T00:00:00Z", format="%Y-%m-%dT%H:%M:%SZ")
 
-    leagues_df = await date_range_data_extractor.fetch_leagues_with_date_range(last_record_datetime, current_datetime, videogames_id_list)
+    leagues_df = await date_range_data_extractor.fetch_leagues_with_date_range(last_record_datetime, videogames_id_list)
 
     if not leagues_df.empty:
         leagues_id_list = list(set(leagues_df.id.to_list() + await mysql_data_manager.get_table_id_list("league")))
     else:
-        leagues_id_list = await mysql_data_manager.get_table_id_list("league")
+        leagues_id_list = list(set(await mysql_data_manager.get_table_id_list("league")))
 
-    series_df = await date_range_data_extractor.fetch_series_with_date_range(leagues_id_list, last_record_datetime, current_datetime)
+    series_df = await date_range_data_extractor.fetch_series_with_date_range(leagues_id_list, last_record_datetime)
 
     if not series_df.empty:
         series_id_list = list(set(series_df.id.to_list() + await mysql_data_manager.get_table_id_list("serie")))
     else:
-        series_id_list = await mysql_data_manager.get_table_id_list("serie")
+        series_id_list = list(set(await mysql_data_manager.get_table_id_list("serie")))
 
-    tournaments_df = await date_range_data_extractor.fetch_tournaments_with_date_range(series_id_list, last_record_datetime, current_datetime)
+    tournaments_df = await date_range_data_extractor.fetch_tournaments_with_date_range(series_id_list, last_record_datetime)
 
     if not tournaments_df.empty:
         tournaments_id_list = list(set(tournaments_df.id.to_list() + await mysql_data_manager.get_table_id_list("tournament")))
     else:
-        tournaments_id_list = await mysql_data_manager.get_table_id_list("tournament")
+        tournaments_id_list = list(set(await mysql_data_manager.get_table_id_list("tournament")))
 
-    matches_raw_df, matches_streams_raw_df, matches_games_raw_df = await date_range_data_extractor.fetch_raw_all_matches_infos_with_date_range([10619], last_record_datetime)
+    matches_raw_df, matches_streams_raw_df, matches_games_raw_df = await date_range_data_extractor.fetch_raw_all_matches_infos_with_date_range(tournaments_id_list, last_record_datetime)
 
     teams_raw_df, players_raw_df = await date_range_data_extractor.fetch_raw_teams_and_players_from_tournaments_id_list(tournaments_id_list)
 
@@ -64,7 +64,7 @@ async def main():
 
     tasks = [mysql_data_manager.insert_or_update_data_async(dataframes['match_game'], 'match_game'), mysql_data_manager.insert_or_update_data_async(dataframes['match_stream'], 'match_stream')]
     await asyncio.gather(*tasks)
-
+    #
     await mysql_data_manager.close_connection()
 
 
