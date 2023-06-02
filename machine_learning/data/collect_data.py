@@ -49,7 +49,7 @@ class DataCollector:
             SELECT m.id, m.name, m.tournament_id, m.number_of_games, m.winner_id, m.home_id, m.away_id, t.tier, t.has_bracket, t.name
             FROM matchs AS m
             INNER JOIN tournament AS t ON m.tournament_id = t.id
-            WHERE m.status = 'finished' AND m.draw = 0
+            WHERE m.status = 'finished' AND m.draw = 0 AND YEAR(m.begin_at) > 2021
         """
 
         async with self.pool.acquire() as connection:

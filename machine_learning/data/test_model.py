@@ -1,42 +1,56 @@
+import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.impute import SimpleImputer
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.preprocessing import LabelEncoder
+from sklearn.svm import SVC
 
+# Charger les données
 df = pd.read_pickle("../dataframes/final_dataframe")
 
-features = df[['match_id', 'name', 'tournament_id', 'number_of_games', 'team_id', 'opponent_id', 'tournament_tier', 'tournament_has_bracket', 'tournament_name']]
+features = df[
+    ['match_id', 'tournament_id', 'number_of_games', 'team_id', 'opponent_id', 'tournament_tier', 'tournament_has_bracket', 'percentage_of_win_after_won_game_1', 'percentage_of_win_against_opponent', 'percentage_of_win_after_n_games']]
+targets = df[['Game 1 winner_id', 'Game 2 winner_id', 'Game 3 winner_id', 'Game 4 winner_id', 'Game 5 winner_id']]
 
-target_columns = ['Game 1 winner_id', 'Game 2 winner_id', 'Game 3 winner_id', 'Game 4 winner_id', 'Game 5 winner_id', 'winner_id']
+df['tournament_has_bracket'] = df['tournament_has_bracket'].astype(int)
 
-for target_column in target_columns:
-    target = df[target_column]
+X = df[['match_id', 'tournament_id', 'number_of_games', 'tournament_tier', 'tournament_has_bracket', 'percentage_of_win_after_won_game_1', 'percentage_of_win_against_opponent', 'percentage_of_win_after_n_games']]
 
-    X_train, X_val, y_train, y_val = train_test_split(features, target, test_size=0.2)
+y = np.where(df['winner_id'] == df['team_id'], 1, 0)
 
-    hyperparameters = {'C': [0.1, 1.0, 10.0], 'max_iter': [100, 500, 1000]}
-    grid_search = GridSearchCV(estimator=LogisticRegression(), param_grid=hyperparameters, cv=5, scoring='accuracy', n_jobs=-1)
+label_encoder = LabelEncoder()
+X['tournament_tier'] = label_encoder.fit_transform(X['tournament_tier'])
 
-    grid_search.fit(X_train, y_train)
+imputer = SimpleImputer(strategy='mean')
+X = imputer.fit_transform(X)
 
-    best_params = grid_search.best_params_
+with open("predictions.txt", "w") as file:
+    for target in ['winner_id']:
+        y = np.where(df[target] == df['team_id'], 1, 0)
 
-    best_model = LogisticRegression(**best_params)
-    best_model.fit(X_train, y_train)
+        target_feature = target
 
-    y_pred = best_model.predict(X_val)
-    accuracy = accuracy_score(y_val, y_pred)
-    precision = precision_score(y_val, y_pred, average="micro")
-    recall = recall_score(y_val, y_pred, average="micro")
-    f1 = f1_score(y_val, y_pred, average="micro")
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
-    print("Target column:", target_column)
-    print("Accuracy:", accuracy)
-    print("Precision:", precision)
-    print("Recall:", recall)
-    print("F1-score:", f1)
+        model = SVC(
+            C=1.0,  # Paramètre de régularisation
+            kernel='rbf',  # Noyau utilisé pour le modèle SVC ('rbf' pour un noyau gaussien)
+            gamma='scale',  # Coefficient gamma pour le noyau ('scale' utilise 1 / (n_features * X.var()) par défaut)
+            random_state=42,
+            probability=True,
+        )
+        model.fit(X_train, y_train)
 
-    new_data = pd.DataFrame(features)
-    new_predictions = best_model.predict_proba(new_data)[:, 1]
+        proba_predictions = model.predict_proba(X_test)
 
-    print(new_predictions)
+        file.write(target + "\n\n")
+
+        for i, proba in enumerate(proba_predictions):
+            match_id = df.iloc[i]['match_id']
+            team_id = df.iloc[i]['team_id']
+            prediction = proba[1]
+            file.write(f"Match ID: {match_id}, Team ID : {team_id}, Probabilité de l'équipe ID: {prediction}\n")
+
+        file.write("\n")

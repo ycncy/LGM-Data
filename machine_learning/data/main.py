@@ -19,17 +19,6 @@ async def main():
     final_dataframe = generate_data_representations(clean_matches_infos_dataframe(data))
 
     final_dataframe.to_pickle("../dataframes/final_dataframe")
-    # x_train, x_test, y_train, y_test = split_dataframe(final_dataframe)
-    #
-    # start_time = datetime.now()
-    #
-    # best_params = search_best_params("DecisionTreeClassifier", x_train, y_train)
-    #
-    # end_time = datetime.now()
-    #
-    # print("Time to search best params: ", end_time - start_time)
-    #
-    # print(best_params)
 
 if __name__ == '__main__':
     asyncio.run(main())
