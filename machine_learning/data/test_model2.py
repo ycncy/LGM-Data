@@ -66,4 +66,11 @@ with open("predictionsTest.txt", "w") as file:
             prediction = proba[1]
             file.write(f"Match ID: {match_id}, Team ID : {team_id}, Win or loose : {winner}, Probabilité de l'équipe ID: {prediction}\n")
 
+        import pickle
+
+        # Sauvegarder le modèle dans un fichier pickle
+        with open("model.pickle", "wb") as file:
+            pickle.dump(calibrated_model, file)
+
         file.write("\n")
+
