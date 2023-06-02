@@ -28,7 +28,7 @@ X['tournament_tier'] = label_encoder.fit_transform(X['tournament_tier'])
 imputer = SimpleImputer(strategy='mean')
 X = imputer.fit_transform(X)
 
-with open("predictionsAll.txt", "w") as file:
+with open("predictionsTest.txt", "w") as file:
     for target in ['winner_id']:
         target_feature = target
 
@@ -44,22 +44,26 @@ with open("predictionsAll.txt", "w") as file:
         # Entraînez le modèle calibré
         calibrated_model.fit(X_train, y_train)
 
+        # Obtenez les probabilités calibrées pour les prédictions
+        proba_predictions = calibrated_model.predict_proba(X_test)
+
         # Faites des prédictions sur les données de test
         y_pred = calibrated_model.predict(X_test)
 
         # Calculer le score d'exactitude
         accuracy = accuracy_score(y_test, y_pred)
 
+
+
         print("Accuracy Score:", accuracy)
 
         file.write(target + "\n\n")
 
-        for i in range(len(df)):
+        for i, proba in enumerate(proba_predictions):
+            winner = y_pred[i]
             match_id = df.iloc[i]['match_id']
             team_id = df.iloc[i]['team_id']
-            prediction = calibrated_model.predict_proba([X[i]])[0][1]
-            file.write(f"Match ID: {match_id}, Team ID : {team_id}, Probabilité de l'équipe ID: {prediction}\n")
+            prediction = proba[1]
+            file.write(f"Match ID: {match_id}, Team ID : {team_id}, Win or loose : {winner}, Probabilité de l'équipe ID: {prediction}\n")
 
         file.write("\n")
-
-
