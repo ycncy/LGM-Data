@@ -42,38 +42,3 @@ class DataExtractor:
                 self.api_key_index += 1
 
                 self.set_api_key(self.api_key_list[self.api_key_index])
-
-    def fetch_raw_all_matches_infos(self, tournaments_id_list):
-        matches_raw_df = pd.DataFrame()
-        matches_streams_raw_df = pd.DataFrame()
-        matches_games_raw_df = pd.DataFrame()
-        matches_opponents_raw_df = pd.DataFrame()
-
-        for tournament_id in tournaments_id_list:
-            self.check_api_key()
-            url = f"{self.api_url}/tournaments/{tournament_id}/matches"
-
-            matches_info = requests.get(url, headers=self.header).json()
-
-            matches_raw_df = pd.concat([matches_raw_df, pd.json_normalize(matches_info)])
-
-            for match_info in matches_info:
-                if "games" in match_info:
-                    matches_games_raw_df = pd.concat([matches_games_raw_df, pd.json_normalize(match_info["games"])])
-
-                if "streams_list" in match_info:
-                    streams_df = pd.json_normalize(match_info["streams_list"])
-                    streams_df["match_id"] = match_info["id"]
-
-                    matches_streams_raw_df = pd.concat([matches_streams_raw_df, streams_df])
-
-                if "opponents" in match_info and isinstance(match_info["opponents"], list) and len(match_info["opponents"]) >= 2:
-                    opponents_dict = [{"home_id": match_info["opponents"][0]["opponent"]["id"], "away_id": match_info["opponents"][1]["opponent"]["id"], "match_id": match_info["id"]}]
-
-                    opponents_df = pd.DataFrame(opponents_dict)
-
-                    matches_opponents_raw_df = pd.concat([matches_opponents_raw_df, opponents_df])
-
-            self.api_call_counter += 1
-
-        return matches_raw_df, matches_streams_raw_df, matches_games_raw_df, matches_opponents_raw_df
