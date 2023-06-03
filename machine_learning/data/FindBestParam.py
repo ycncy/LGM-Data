@@ -39,13 +39,13 @@ model.fit(X_train, y_train)
 
 # Définir les hyperparamètres à tester pour CalibratedClassifierCV
 param_grid_cc = {
-    'base_estimator__n_estimators': [50, 100, 200],
-    'base_estimator__min_samples_leaf': [1, 5, 10]
+    'estimator__n_estimators': [50, 100, 200],
+    'estimator__min_samples_leaf': [1, 5, 10]
 }
 
 # Créer un objet GridSearchCV pour le modèle CalibratedClassifierCV
 grid_search_cc = GridSearchCV(
-    CalibratedClassifierCV(RandomForestClassifier(random_state=42)),
+    CalibratedClassifierCV(model),
     param_grid_cc,
     cv=5
 )
