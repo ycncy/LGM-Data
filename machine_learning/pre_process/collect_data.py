@@ -1,14 +1,7 @@
-"""
-
-Features : name, team_id, opponent_id, number_of_games, tournament_tier, tournament_has_bracket, serie_name
-
-Result : winner_id, games_result (résultat pour chaque game en gros noté combien de game gagné et combien de game perdues pour chaque équipe)
-
-"""
 import asyncio
 import aiomysql
 
-from data_processing import *
+from machine_learning.pre_process.data_processing import *
 
 
 class DataCollector:
@@ -70,3 +63,12 @@ class DataCollector:
         final_dataframe = pd.merge(dataframe_from_select_query, pd.DataFrame(matches_detailed_results), left_on="match_id", right_on="match_id")
 
         return final_dataframe
+
+    async def run_collect_data_method(self):
+        await self.connect_to_database()
+
+        dataframe = await self.collect_all_matches_infos_to_train()
+
+        await self.close_connection()
+
+        return dataframe
