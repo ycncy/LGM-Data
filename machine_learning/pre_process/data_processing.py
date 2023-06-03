@@ -1,4 +1,5 @@
 import pandas as pd
+from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 
@@ -51,9 +52,15 @@ def generate_data_representations(matches_infos_dataframe):
     return concatenated_matches_infos_dataframe
 
 
-def split_dataframe(dataframe):
+def split_and_encode_dataframe(dataframe):
     x_dataframe = dataframe[["match_id", "tournament_id", "number_of_games", "name", "team_id", "opponent_id", "tournament_has_bracket", "tournament_tier", "tournament_name"]]
     y_dataframe = dataframe[["winner_id", 'Game 1 winner_id', 'Game 2 winner_id', 'Game 3 winner_id', 'Game 4 winner_id', 'Game 5 winner_id']]
+
+    label_encoder = LabelEncoder()
+    x_dataframe['tournament_tier'] = label_encoder.fit_transform(x_dataframe['tournament_tier'])
+
+    simple_imputer = SimpleImputer(strategy='mean')
+    x_dataframe = simple_imputer.fit_transform(x_dataframe)
 
     x_train, x_test, y_train, y_test = train_test_split(x_dataframe, y_dataframe, test_size=0.2)
 
