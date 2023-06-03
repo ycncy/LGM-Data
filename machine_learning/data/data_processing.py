@@ -25,33 +25,30 @@ def generate_data_representations(matches_infos_dataframe):
     concatenated_matches_infos_dataframe['tournament_tier'] = label_encoder.fit_transform(concatenated_matches_infos_dataframe['tournament_tier'])
     concatenated_matches_infos_dataframe['name'] = label_encoder.fit_transform(concatenated_matches_infos_dataframe['name'])
 
+    number_of_matches_won_by_team_id_after_won_game_1 = concatenated_matches_infos_dataframe[(concatenated_matches_infos_dataframe["team_id"] == concatenated_matches_infos_dataframe["winner_id"]) & (concatenated_matches_infos_dataframe["team_id"] == concatenated_matches_infos_dataframe["Game 1 winner_id"])].groupby("team_id")["team_id"].count()
+
+    number_of_matches_played_by_team_id = concatenated_matches_infos_dataframe.groupby("team_id")["team_id"].count()
+
+    percentage_of_win_after_won_game_1 = number_of_matches_won_by_team_id_after_won_game_1 / number_of_matches_played_by_team_id * 100
+
+    concatenated_matches_infos_dataframe = concatenated_matches_infos_dataframe.merge(percentage_of_win_after_won_game_1.to_frame(), left_on="team_id", right_index=True, how="left")
+
+    concatenated_matches_infos_dataframe.rename(columns={"team_id_y": "percentage_of_win_after_won_game_1", "team_id_x": "team_id"}, inplace=True)
+
+    concatenated_matches_infos_dataframe['percentage_of_win_against_opponent'] = concatenated_matches_infos_dataframe.apply(
+        lambda row: concatenated_matches_infos_dataframe[(concatenated_matches_infos_dataframe['team_id'] == row['team_id']) & (concatenated_matches_infos_dataframe['opponent_id'] == row['opponent_id'])]['winner_id'].value_counts(normalize=True).get(row['team_id'], np.nan) if row['team_id'] != row['opponent_id'] else np.nan, axis=1)
+
+    number_of_matches_won_in_n_games_by_team_id = concatenated_matches_infos_dataframe[concatenated_matches_infos_dataframe["team_id"] == concatenated_matches_infos_dataframe["winner_id"]].groupby(["number_of_games", "team_id"])["team_id"].count()
+
+    number_of_matches_played_by_team_id = concatenated_matches_infos_dataframe.groupby(["number_of_games", "team_id"])["team_id"].count()
+
+    percentage_of_win_in_matches_of_n_games = number_of_matches_won_in_n_games_by_team_id / number_of_matches_played_by_team_id
+
+    concatenated_matches_infos_dataframe = concatenated_matches_infos_dataframe.merge(percentage_of_win_in_matches_of_n_games.to_frame(), left_on=["number_of_games", "team_id"], right_index=True, how="left")
+
+    concatenated_matches_infos_dataframe.rename(columns={"team_id_y": "percentage_of_win_after_n_games", "team_id_x": "team_id"}, inplace=True)
+
     return concatenated_matches_infos_dataframe
-
-    # percentage_of_win_per_team_after_won_game_1 = concatenated_matches_infos_dataframe[concatenated_matches_infos_dataframe["winner_id"] == concatenated_matches_infos_dataframe["Game 1 winner_id"]].groupby("team_id").size() / concatenated_matches_infos_dataframe.groupby("team_id").size() * 100
-    #
-    # percentage_of_win_per_team_after_won_game_1.name = "percentage_of_win_per_team_after_won_game_1"
-    #
-    # concatenated_matches_infos_dataframe = pd.merge(concatenated_matches_infos_dataframe, percentage_of_win_per_team_after_won_game_1.to_frame(), left_on="team_id", right_index=True, how="left")
-    #
-    # team_games_against_opponent = concatenated_matches_infos_dataframe.groupby(["team_id", "opponent_id"]).size()
-    #
-    # team_games_against_opponent.name = "number_of_games_against_opponent"
-    #
-    # team_won_games = pd.merge(concatenated_matches_infos_dataframe, team_games_against_opponent, on=["team_id", "opponent_id"], how='left')
-    #
-    # df = team_won_games[team_won_games["team_id"] == team_won_games["winner_id"]]
-    #
-    # percentage_of_win_against_opponent = df.groupby(["team_id", "opponent_id"]).size() / team_games_against_opponent * 100
-    # percentage_of_win_against_opponent.name = "percentage_of_win_against_opponent"
-    #
-    # team_won_games = pd.merge(team_won_games, percentage_of_win_against_opponent.to_frame(), on=["team_id", "opponent_id"], how='left')
-    #
-    # print(team_won_games)
-
-    # nparray_home_team = np.array2string(dataframe_home_team.to_numpy(), separator=', ')
-    # nparray_away_team = np.array2string(dataframe_away_team.to_numpy(), separator=', ')
-
-    # return nparray_home_team, nparray_away_team
 
 
 def split_dataframe(dataframe):
