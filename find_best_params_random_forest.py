@@ -1,11 +1,10 @@
+import asyncio
 import os
 import sys
 
 from machine_learning.models.random_forest.random_forest import RandomForestModel
-from machine_learning.pre_process.collect_data import *
-
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
-sys.path.append(parent_dir)
+from machine_learning.pre_process.collect_data import DataCollector
+from machine_learning.pre_process.data_processing import clean_matches_infos_dataframe, generate_data_representations, split_and_encode_dataframe
 
 data_collector = DataCollector("34.155.63.44", "admin", "azertyuiop", "main")
 
