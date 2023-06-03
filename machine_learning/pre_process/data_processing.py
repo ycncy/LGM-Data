@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
@@ -49,15 +50,21 @@ def generate_data_representations(matches_infos_dataframe):
 
     concatenated_matches_infos_dataframe.rename(columns={"team_id_y": "percentage_of_win_after_n_games", "team_id_x": "team_id"}, inplace=True)
 
+    columns_to_update = ["Game 1 winner_id", "Game 2 winner_id", "Game 3 winner_id", "Game 4 winner_id", "Game 5 winner_id", "winner_id"]
+
+    for column in columns_to_update:
+        concatenated_matches_infos_dataframe[column] = np.where(concatenated_matches_infos_dataframe[column] == concatenated_matches_infos_dataframe["team_id"], 1, np.where(concatenated_matches_infos_dataframe[column] == -1, -1, 0))
+
     return concatenated_matches_infos_dataframe
 
 
 def split_and_encode_dataframe(dataframe):
     x_dataframe = dataframe[["match_id", "tournament_id", "number_of_games", "name", "team_id", "opponent_id", "tournament_has_bracket", "tournament_tier", "tournament_name"]]
-    y_dataframe = dataframe[["winner_id", 'Game 1 winner_id', 'Game 2 winner_id', 'Game 3 winner_id', 'Game 4 winner_id', 'Game 5 winner_id']]
+    # y_dataframe = dataframe[["winner_id", 'Game 1 winner_id', 'Game 2 winner_id', 'Game 3 winner_id', 'Game 4 winner_id', 'Game 5 winner_id']]
+    y_dataframe = dataframe["winner_id"]
 
     label_encoder = LabelEncoder()
-    x_dataframe['tournament_tier'] = label_encoder.fit_transform(x_dataframe['tournament_tier'])
+    x_dataframe.loc[:, 'tournament_tier'] = label_encoder.fit_transform(x_dataframe['tournament_tier'])
 
     simple_imputer = SimpleImputer(strategy='mean')
     x_dataframe = simple_imputer.fit_transform(x_dataframe)
