@@ -1,6 +1,3 @@
-import asyncio
-import concurrent.futures
-
 import aiomysql
 import numpy as np
 from sqlalchemy import create_engine
@@ -89,60 +86,53 @@ class MySQLDataManager:
         async with self.pool.acquire() as conn:
             async with conn.cursor() as cursor:
                 if not dataframe.empty:
-                    try:
-                        with concurrent.futures.ThreadPoolExecutor() as executor:
-                            loop = asyncio.get_event_loop()
-                            tasks = []
+                    for index, row in dataframe.iterrows():
+                        query_select = f"SELECT * FROM `{table_name}` WHERE {column_to_check} = {row[column_to_check]}"
 
-                            for index, row in dataframe.iterrows():
-                                task = loop.run_in_executor(executor, self.process_row, conn, cursor, index, row, table_name, column_to_check)
-                                tasks.append(task)
+                        try:
+                            await cursor.execute(query_select)
 
-                            await asyncio.gather(*tasks)
+                            result = await cursor.fetchone()
 
-                        await conn.commit()
+                            if result:
+                                query_update = f"UPDATE `{table_name}` SET "
 
-                    except Exception as e:
-                        print(f"Erreur {e}: Skipping to the next iteration.")
+                                updates = []
+                                for column, value in row.items():
+                                    if column == "name":
+                                        value = value.replace("'", "''")
+                                    update = f"{column} = '{value}'"
+                                    updates.append(update)
 
+                                query_update += ", ".join(updates)
+                                query_update += f" WHERE {column_to_check} = '{row[column_to_check]}'"
 
-    async def process_row(self, cursor, index, row, table_name, column_to_check):
-        query_select = f"SELECT * FROM `{table_name}` WHERE {column_to_check} = {row[column_to_check]}"
-        await cursor.execute(query_select)
-        result = await cursor.fetchone()
+                                await cursor.execute(query_update)
 
-        if result:
-            query_update = f"UPDATE `{table_name}` SET "
+                                if cursor.rowcount >= 1:
+                                    print(f"Mise à jour de la ligne {index} dans la table {table_name} avec succès!")
+                                else:
+                                    print(f"Erreur lors de la mise à jour de la ligne {index} dans la table {table_name}.")
 
-            updates = []
-            for column, value in row.items():
-                if column == "name":
-                    value = value.replace("'", "''")
-                update = f"{column} = '{value}'"
-                updates.append(update)
+                            else:
+                                query_insert = f"INSERT INTO `{table_name}` ("
+                                query_insert += ", ".join(row.keys())
+                                query_insert += ") VALUES ("
+                                query_insert += ", ".join([f"'{value.tolist()}'" if isinstance(value, np.ndarray) else f"'{value}'" for value in row.values.tolist()])
+                                query_insert += ")"
 
-            query_update += ", ".join(updates)
-            query_update += f" WHERE {column_to_check} = '{row[column_to_check]}'"
+                                await cursor.execute(query_insert)
 
-            await cursor.execute(query_update)
+                                if cursor.rowcount >= 1:
+                                    print(f"Insertion de la ligne {index} dans la table {table_name} avec succès!")
+                                else:
+                                    print(f"Erreur lors de l'insertion de la ligne {index} dans la table {table_name}.")
 
-            if cursor.rowcount >= 1:
-                print(f"Mise à jour de la ligne {index} dans la table {table_name} avec succès!")
-            else:
-                print(f"Erreur lors de la mise à jour de la ligne {index} dans la table {table_name}.")
-        else:
-            query_insert = f"INSERT INTO `{table_name}` ("
-            query_insert += ", ".join(row.keys())
-            query_insert += ") VALUES ("
-            query_insert += ", ".join([f"'{value.tolist()}'" if isinstance(value, np.ndarray) else f"'{value}'" for value in row.values.tolist()])
-            query_insert += ")"
+                        except Exception as e:
+                            print(f"Erreur {e}: Skipping to the next iteration.")
+                            continue
 
-            await cursor.execute(query_insert)
-
-            if cursor.rowcount >= 1:
-                print(f"Insertion de la ligne {index} dans la table {table_name} avec succès!")
-            else:
-                print(f"Erreur lors de l'insertion de la ligne {index} dans la table {table_name}.")
+                await conn.commit()
 
 
     async def insert_or_update_data_async(self, dataframe, table_name):
