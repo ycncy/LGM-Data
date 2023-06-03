@@ -13,7 +13,7 @@ class RandomForestModel:
     def get_params(self):
         return self.model.get_params()
 
-    def search_best_params(self, X_train, y_train, param_grid):
+    def find_best_params(self, X_train, y_train, param_grid):
         grid_search = GridSearchCV(CalibratedClassifierCV(self.model, cv=5), param_grid, cv=5)
 
         grid_search.fit(X_train, y_train)
