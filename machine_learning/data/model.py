@@ -1,4 +1,5 @@
 from sklearn.model_selection import GridSearchCV, cross_val_score
+from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 
 
@@ -9,6 +10,17 @@ def search_best_params(model_name, x_train, y_train):
         param_grid = {'max_depth': [4, 5, 6], 'criterion': ['gini', 'entropy'], 'splitter': ['best', 'random'], 'max_features': ['sqrt', 'log2'], 'min_samples_split': [2, 5, 10], 'min_samples_leaf': [1, 2, 3]}
 
         grid_search = GridSearchCV(decision_tree_classifier, param_grid, cv=3)
+
+        grid_search.fit(x_train, y_train)
+
+        return grid_search.best_params_
+
+    if model_name == "SVC":
+        svc = SVC()
+
+        param_grid = {'C': [0.1, 1, 10], 'gamma': [0.1, 0.01, 0.001], 'kernel': ['linear', 'rbf', 'poly']}
+
+        grid_search = GridSearchCV(svc, param_grid, cv=3)
 
         grid_search.fit(x_train, y_train)
 
@@ -30,3 +42,11 @@ def fit_with_best_params(model_name, params, x_train, y_train):
         decision_tree_classifier.fit(x_train, y_train)
 
         return decision_tree_classifier
+
+
+    if model_name == "SVC":
+        svc = SVC(**params)
+
+        svc.fit(x_train, y_train)
+
+        return svc
