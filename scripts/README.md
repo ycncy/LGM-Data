@@ -11,6 +11,6 @@ C'est un répertoire simple qui contient trois scripts :
 - [Envoyer les dataframes](load_pickle_to_mysql_server.py) : Ce script permet de parcourir le répertoire contenant les
   dataframes en format `Pickle` et envoyer chaque dataframe dans la base de données, ce script utilise la
   méthode `add_dataframe_to_database` créer les tables et d'y insérer les données du dataframe.
-- [Script principal](add_data_until_last_record.py) : Ce script permet de récupérer les nouvelles données de l'API à
+- [Script principal](update_database/add_data_until_last_record.py) : Ce script permet de récupérer les nouvelles données de l'API à
   partir de la date de la dernière mise à jour, ce script est fait pour se lancer toutes les heures et ajouter les
   nouvelles ou mettre à jour les données de la base de données.
