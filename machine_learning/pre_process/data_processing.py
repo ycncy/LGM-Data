@@ -21,17 +21,11 @@ def generate_data_representations(matches_infos_dataframe):
 
     concatenated_matches_infos_dataframe = pd.concat([dataframe_home_team, dataframe_away_team], ignore_index=True)
 
-    label_encoder = LabelEncoder()
-
-    concatenated_matches_infos_dataframe['tournament_name'] = label_encoder.fit_transform(concatenated_matches_infos_dataframe['tournament_name'])
-    concatenated_matches_infos_dataframe['tournament_tier'] = label_encoder.fit_transform(concatenated_matches_infos_dataframe['tournament_tier'])
-    concatenated_matches_infos_dataframe['name'] = label_encoder.fit_transform(concatenated_matches_infos_dataframe['name'])
-
     number_of_matches_won_by_team_id_after_won_game_1 = concatenated_matches_infos_dataframe[(concatenated_matches_infos_dataframe["team_id"] == concatenated_matches_infos_dataframe["winner_id"]) & (concatenated_matches_infos_dataframe["team_id"] == concatenated_matches_infos_dataframe["Game 1 winner_id"])].groupby("team_id")["team_id"].count()
 
     number_of_matches_played_by_team_id = concatenated_matches_infos_dataframe.groupby("team_id")["team_id"].count()
 
-    percentage_of_win_after_won_game_1 = number_of_matches_won_by_team_id_after_won_game_1 / number_of_matches_played_by_team_id * 100
+    percentage_of_win_after_won_game_1 = number_of_matches_won_by_team_id_after_won_game_1 / number_of_matches_played_by_team_id
 
     concatenated_matches_infos_dataframe = concatenated_matches_infos_dataframe.merge(percentage_of_win_after_won_game_1.to_frame(), left_on="team_id", right_index=True, how="left")
 
@@ -59,7 +53,8 @@ def generate_data_representations(matches_infos_dataframe):
 
 
 def split_and_encode_dataframe(dataframe):
-    x_dataframe = dataframe[["match_id", "tournament_id", "number_of_games", "name", "team_id", "opponent_id", "tournament_has_bracket", "tournament_tier", "tournament_name"]]
+    x_dataframe = dataframe[['match_id', 'tournament_id', 'number_of_games', 'tournament_tier', 'tournament_has_bracket',
+        'percentage_of_win_after_won_game_1', 'percentage_of_win_against_opponent', 'percentage_of_win_after_n_games']]
     # y_dataframe = dataframe[["winner_id", 'Game 1 winner_id', 'Game 2 winner_id', 'Game 3 winner_id', 'Game 4 winner_id', 'Game 5 winner_id']]
     y_dataframe = dataframe["winner_id"]
 
@@ -69,6 +64,6 @@ def split_and_encode_dataframe(dataframe):
     simple_imputer = SimpleImputer(strategy='mean')
     x_dataframe = simple_imputer.fit_transform(x_dataframe)
 
-    x_train, x_test, y_train, y_test = train_test_split(x_dataframe, y_dataframe, test_size=0.2)
+    x_train, x_test, y_train, y_test = train_test_split(x_dataframe, y_dataframe, test_size=0.2, random_state=42)
 
     return x_train, x_test, y_train, y_test
