@@ -12,14 +12,15 @@ def clean_matches_infos_dataframe(matches_infos_dataframe):
 
     matches_infos_dataframe["tournament_has_bracket"] = matches_infos_dataframe["tournament_has_bracket"].astype(bool).astype(int)
 
-    return matches_infos_dataframe
-
-
-def generate_data_representations(matches_infos_dataframe):
     dataframe_home_team = matches_infos_dataframe.rename({"away_id": "opponent_id", "home_id": "team_id"}, axis=1)
     dataframe_away_team = matches_infos_dataframe.rename({"home_id": "opponent_id", "away_id": "team_id"}, axis=1)
 
     concatenated_matches_infos_dataframe = pd.concat([dataframe_home_team, dataframe_away_team], ignore_index=True)
+
+    return concatenated_matches_infos_dataframe
+
+
+def generate_data_representations(concatenated_matches_infos_dataframe):
 
     number_of_matches_won_by_team_id_after_won_game_1 = concatenated_matches_infos_dataframe[(concatenated_matches_infos_dataframe["team_id"] == concatenated_matches_infos_dataframe["winner_id"]) & (concatenated_matches_infos_dataframe["team_id"] == concatenated_matches_infos_dataframe["Game 1 winner_id"])].groupby("team_id")["team_id"].count()
 

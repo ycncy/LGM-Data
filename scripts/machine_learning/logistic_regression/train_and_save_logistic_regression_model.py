@@ -20,9 +20,9 @@ X_train, X_test, y_train, y_test = split_and_encode_dataframe(matches_df)
 
 best_param = {'C': 0.01, 'max_iter': 1000, 'penalty': 'l2', 'solver': 'newton-cg'}
 
-model = LogisticRegressionModel(best_params=best_param)
+model = LogisticRegressionModel()
 
-model.train(X_train, y_train)
+model.train(X_train, y_train, best_params=best_param)
 
 predictions_cc = model.predict(X_test)
 
