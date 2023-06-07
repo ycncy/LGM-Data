@@ -2,11 +2,12 @@ import numpy as np
 import pandas as pd
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 
 def clean_matches_infos_dataframe(matches_infos_dataframe):
-    matches_infos_dataframe[["match_id", "tournament_id", "number_of_games", "winner_id", "home_id", "away_id", 'Game 1 winner_id', 'Game 2 winner_id', 'Game 3 winner_id', 'Game 4 winner_id', 'Game 5 winner_id']] = matches_infos_dataframe[["match_id", "tournament_id", "number_of_games", "winner_id", "home_id", "away_id", 'Game 1 winner_id', 'Game 2 winner_id', 'Game 3 winner_id', 'Game 4 winner_id', 'Game 5 winner_id']].fillna(-1).astype("int64")
+    matches_infos_dataframe[["match_id", "tournament_id", "number_of_games", "winner_id", "home_id", "away_id", 'Game 1 winner_id', 'Game 2 winner_id', 'Game 3 winner_id', 'Game 4 winner_id', 'Game 5 winner_id']] = matches_infos_dataframe[
+        ["match_id", "tournament_id", "number_of_games", "winner_id", "home_id", "away_id", 'Game 1 winner_id', 'Game 2 winner_id', 'Game 3 winner_id', 'Game 4 winner_id', 'Game 5 winner_id']].fillna(-1).astype("int64")
 
     matches_infos_dataframe[["name", "tournament_tier", "tournament_name"]] = matches_infos_dataframe[["name", "tournament_tier", "tournament_name"]].astype(str)
 
@@ -21,8 +22,9 @@ def clean_matches_infos_dataframe(matches_infos_dataframe):
 
 
 def generate_data_representations(concatenated_matches_infos_dataframe):
-
-    number_of_matches_won_by_team_id_after_won_game_1 = concatenated_matches_infos_dataframe[(concatenated_matches_infos_dataframe["team_id"] == concatenated_matches_infos_dataframe["winner_id"]) & (concatenated_matches_infos_dataframe["team_id"] == concatenated_matches_infos_dataframe["Game 1 winner_id"])].groupby("team_id")["team_id"].count()
+    number_of_matches_won_by_team_id_after_won_game_1 = concatenated_matches_infos_dataframe[
+        (concatenated_matches_infos_dataframe["team_id"] == concatenated_matches_infos_dataframe["winner_id"]) & (concatenated_matches_infos_dataframe["team_id"] == concatenated_matches_infos_dataframe["Game 1 winner_id"])].groupby(
+        "team_id")["team_id"].count()
 
     number_of_matches_played_by_team_id = concatenated_matches_infos_dataframe.groupby("team_id")["team_id"].count()
 
@@ -33,9 +35,11 @@ def generate_data_representations(concatenated_matches_infos_dataframe):
     concatenated_matches_infos_dataframe.rename(columns={"team_id_y": "percentage_of_win_after_won_game_1", "team_id_x": "team_id"}, inplace=True)
 
     concatenated_matches_infos_dataframe['percentage_of_win_against_opponent'] = concatenated_matches_infos_dataframe.apply(
-        lambda row: concatenated_matches_infos_dataframe[(concatenated_matches_infos_dataframe['team_id'] == row['team_id']) & (concatenated_matches_infos_dataframe['opponent_id'] == row['opponent_id'])]['winner_id'].value_counts(normalize=True).get(row['team_id'], np.nan) if row['team_id'] != row['opponent_id'] else np.nan, axis=1)
+        lambda row: concatenated_matches_infos_dataframe[(concatenated_matches_infos_dataframe['team_id'] == row['team_id']) & (concatenated_matches_infos_dataframe['opponent_id'] == row['opponent_id'])]['winner_id'].value_counts(
+            normalize=True).get(row['team_id'], np.nan) if row['team_id'] != row['opponent_id'] else np.nan, axis=1)
 
-    number_of_matches_won_in_n_games_by_team_id = concatenated_matches_infos_dataframe[concatenated_matches_infos_dataframe["team_id"] == concatenated_matches_infos_dataframe["winner_id"]].groupby(["number_of_games", "team_id"])["team_id"].count()
+    number_of_matches_won_in_n_games_by_team_id = concatenated_matches_infos_dataframe[concatenated_matches_infos_dataframe["team_id"] == concatenated_matches_infos_dataframe["winner_id"]].groupby(["number_of_games", "team_id"])[
+        "team_id"].count()
 
     number_of_matches_played_by_team_id = concatenated_matches_infos_dataframe.groupby(["number_of_games", "team_id"])["team_id"].count()
 
@@ -54,8 +58,7 @@ def generate_data_representations(concatenated_matches_infos_dataframe):
 
 
 def split_and_encode_dataframe(dataframe):
-    x_dataframe = dataframe[['match_id', 'tournament_id', 'number_of_games', 'tournament_tier', 'tournament_has_bracket',
-        'percentage_of_win_after_won_game_1', 'percentage_of_win_against_opponent', 'percentage_of_win_after_n_games']]
+    x_dataframe = dataframe[['match_id', 'tournament_id', 'number_of_games', 'tournament_tier', 'tournament_has_bracket', 'percentage_of_win_after_won_game_1', 'percentage_of_win_against_opponent', 'percentage_of_win_after_n_games']]
     # y_dataframe = dataframe[["winner_id", 'Game 1 winner_id', 'Game 2 winner_id', 'Game 3 winner_id', 'Game 4 winner_id', 'Game 5 winner_id']]
     y_dataframe = dataframe["winner_id"]
 
@@ -65,6 +68,10 @@ def split_and_encode_dataframe(dataframe):
     simple_imputer = SimpleImputer(strategy='mean')
     x_dataframe = simple_imputer.fit_transform(x_dataframe)
 
-    x_train, x_test, y_train, y_test = train_test_split(x_dataframe, y_dataframe, test_size=0.2, random_state=42)
+    x_train, x_test, y_train, y_test = train_test_split(x_dataframe, y_dataframe, test_size=0.2)
 
-    return x_train, x_test, y_train, y_test
+    sc = StandardScaler()
+    x_train_scaled = sc.fit_transform(x_train)
+    x_test_scaled = sc.transform(x_test)
+
+    return x_train_scaled, x_test_scaled, y_train, y_test
