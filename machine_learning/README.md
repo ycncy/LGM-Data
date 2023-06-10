@@ -12,17 +12,7 @@ Le répertoire est organisé de la manière suivante :
 
 - Le répertoire `models` : Contient les différents modèles de machine learning utilisés pour calculer les cotes des futurs matchs.
 
-  - Le sous-répertoire `gradient_boosting` : Contient les fichiers relatifs au modèle de boosting par gradient.
-
-    - `gradient_boosting.py` : Ce fichier contient le code pour entraîner et utiliser le modèle de boosting par gradient.
-
-  - Le sous-répertoire `logistic_regression` : Contient les fichiers relatifs au modèle de régression logistique.
-
-    - `logistic_regression.py` : Ce fichier contient le code pour entraîner et utiliser le modèle de régression logistique.
-
-  - Le sous-répertoire `random_forest` : Contient les fichiers relatifs au modèle de forêt aléatoire.
-
-    - `random_forest.py` : Ce fichier contient le code pour entraîner et utiliser le modèle de forêt aléatoire.
+  - Un sous-répertoire par modèle contenant les fichiers et les classes relatifs à chaque modèle implémenté.
 
 - Le répertoire `pre_process` : Contient les fichiers pour le prétraitement des données avant l'entraînement des modèles.
 
